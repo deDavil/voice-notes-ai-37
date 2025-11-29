@@ -72,7 +72,7 @@ serve(async (req) => {
 
     const extractionPrompt = `You are an assistant that extracts structured information from voice note transcriptions about people someone has met.
 
-Given this transcription, extract the following information. If something is not mentioned, leave it as null. Do not make up information that isn't stated or clearly implied.
+Given this transcription, extract the following information. If something is not mentioned, leave it as null or empty array. Do not make up information that isn't stated or clearly implied.
 
 Transcription:
 """
@@ -89,8 +89,32 @@ Return a JSON object with these fields:
   "relationship_type": "string - one of: professional, personal, networking, other",
   "suggested_tags": ["array of strings - relevant tags based on context"],
   "follow_up_actions": ["array of strings - any mentioned next steps or todos"],
-  "additional_context": "string or null - any other relevant information"
+  "additional_context": "string or null - any other relevant information",
+  "todos": [
+    {
+      "text": "concrete action item to do",
+      "context": "brief context if helpful"
+    }
+  ],
+  "suggestions": [
+    {
+      "text": "name of book/podcast/article/tool",
+      "type": "book|podcast|article|tool|course|other",
+      "context": "why they recommended it"
+    }
+  ]
 }
+
+EXTRACTION RULES FOR TODOS:
+- Extract concrete actions the user should take
+- Examples: "send them X", "introduce them to Y", "follow up about Z", "share the document"
+- Do NOT include vague items like "stay in touch"
+
+EXTRACTION RULES FOR SUGGESTIONS:
+- Extract specific recommendations the person made
+- Books, podcasts, articles, tools, courses, people to meet
+- Include the name/title if mentioned
+- Infer type from context (e.g., "read X" = book, "listen to X" = podcast)
 
 Only return the JSON object, no other text.`;
 

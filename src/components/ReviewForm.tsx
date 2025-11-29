@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ProcessedVoiceNote } from '@/hooks/useVoiceRecorder';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -19,12 +20,29 @@ import {
 } from '@/components/ui/collapsible';
 import { ChevronDown, X, Plus, Save, Loader2 } from 'lucide-react';
 import { Connection } from '@/types/connection';
+import { SuggestionType, suggestionTypeIcons, suggestionTypeLabels } from '@/types/suggestion';
 import { cn } from '@/lib/utils';
+
+interface ExtractedTodoItem {
+  text: string;
+  selected: boolean;
+}
+
+interface ExtractedSuggestionItem {
+  text: string;
+  type: SuggestionType;
+  selected: boolean;
+}
 
 interface ReviewFormProps {
   data: ProcessedVoiceNote;
   existingConnections: Connection[];
-  onSave: (data: Omit<Connection, 'id' | 'created_at' | 'updated_at'>, existingId?: string) => void;
+  onSave: (
+    data: Omit<Connection, 'id' | 'created_at' | 'updated_at'>,
+    existingId?: string,
+    todos?: { text: string }[],
+    suggestions?: { text: string; type: SuggestionType }[]
+  ) => void;
   onCancel: () => void;
   isSaving: boolean;
 }
@@ -49,6 +67,23 @@ export function ReviewForm({
     follow_up_actions: extracted?.follow_up_actions || [],
     additional_notes: extracted?.additional_context || '',
   });
+
+  // Initialize todos from extracted data
+  const [extractedTodos, setExtractedTodos] = useState<ExtractedTodoItem[]>(
+    (extracted?.todos || []).map(t => ({ text: t.text, selected: true }))
+  );
+  const [newTodoText, setNewTodoText] = useState('');
+
+  // Initialize suggestions from extracted data
+  const [extractedSuggestions, setExtractedSuggestions] = useState<ExtractedSuggestionItem[]>(
+    (extracted?.suggestions || []).map(s => ({ 
+      text: s.text, 
+      type: s.type as SuggestionType, 
+      selected: true 
+    }))
+  );
+  const [newSuggestionText, setNewSuggestionText] = useState('');
+  const [newSuggestionType, setNewSuggestionType] = useState<SuggestionType>('book');
 
   const [newTag, setNewTag] = useState('');
   const [newInterest, setNewInterest] = useState('');
@@ -108,6 +143,46 @@ export function ReviewForm({
     }));
   };
 
+  // Todo handlers
+  const handleToggleTodo = (index: number) => {
+    setExtractedTodos(prev => 
+      prev.map((t, i) => i === index ? { ...t, selected: !t.selected } : t)
+    );
+  };
+
+  const handleAddTodo = () => {
+    if (newTodoText.trim()) {
+      setExtractedTodos(prev => [...prev, { text: newTodoText.trim(), selected: true }]);
+      setNewTodoText('');
+    }
+  };
+
+  const handleRemoveTodo = (index: number) => {
+    setExtractedTodos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Suggestion handlers
+  const handleToggleSuggestion = (index: number) => {
+    setExtractedSuggestions(prev => 
+      prev.map((s, i) => i === index ? { ...s, selected: !s.selected } : s)
+    );
+  };
+
+  const handleAddSuggestion = () => {
+    if (newSuggestionText.trim()) {
+      setExtractedSuggestions(prev => [...prev, { 
+        text: newSuggestionText.trim(), 
+        type: newSuggestionType, 
+        selected: true 
+      }]);
+      setNewSuggestionText('');
+    }
+  };
+
+  const handleRemoveSuggestion = (index: number) => {
+    setExtractedSuggestions(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = () => {
     const connectionData = {
       name: formData.name || null,
@@ -123,10 +198,16 @@ export function ReviewForm({
       is_favorite: false,
     };
 
+    const selectedTodos = extractedTodos.filter(t => t.selected).map(t => ({ text: t.text }));
+    const selectedSuggestions = extractedSuggestions.filter(s => s.selected).map(s => ({ 
+      text: s.text, 
+      type: s.type 
+    }));
+
     if (saveMode === 'existing' && selectedConnectionId) {
-      onSave(connectionData, selectedConnectionId);
+      onSave(connectionData, selectedConnectionId, selectedTodos, selectedSuggestions);
     } else {
-      onSave(connectionData);
+      onSave(connectionData, undefined, selectedTodos, selectedSuggestions);
     }
   };
 
@@ -318,6 +399,93 @@ export function ReviewForm({
           />
         </div>
       </div>
+
+      {/* Extracted TO-DOs */}
+      {(extractedTodos.length > 0 || newTodoText) && (
+        <div className="border-t pt-4 space-y-3">
+          <Label className="flex items-center gap-2">
+            ✅ Action Items Detected ({extractedTodos.filter(t => t.selected).length})
+          </Label>
+          <div className="space-y-2">
+            {extractedTodos.map((todo, index) => (
+              <div key={index} className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
+                <Checkbox 
+                  checked={todo.selected} 
+                  onCheckedChange={() => handleToggleTodo(index)}
+                />
+                <span className={cn("text-sm flex-1", !todo.selected && "text-muted-foreground line-through")}>
+                  {todo.text}
+                </span>
+                <button onClick={() => handleRemoveTodo(index)} className="text-muted-foreground hover:text-destructive">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              placeholder="Add another action item"
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTodo())}
+              className="flex-1"
+            />
+            <Button type="button" variant="outline" size="icon" onClick={handleAddTodo}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Extracted Suggestions */}
+      {(extractedSuggestions.length > 0 || newSuggestionText) && (
+        <div className="border-t pt-4 space-y-3">
+          <Label className="flex items-center gap-2">
+            💡 Suggestions Detected ({extractedSuggestions.filter(s => s.selected).length})
+          </Label>
+          <div className="space-y-2">
+            {extractedSuggestions.map((suggestion, index) => (
+              <div key={index} className="flex items-center gap-3 p-2 bg-muted/30 rounded-md">
+                <Checkbox 
+                  checked={suggestion.selected} 
+                  onCheckedChange={() => handleToggleSuggestion(index)}
+                />
+                <span className="text-base">{suggestionTypeIcons[suggestion.type]}</span>
+                <span className={cn("text-sm flex-1", !suggestion.selected && "text-muted-foreground line-through")}>
+                  {suggestion.text}
+                </span>
+                <button onClick={() => handleRemoveSuggestion(index)} className="text-muted-foreground hover:text-destructive">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newSuggestionText}
+              onChange={(e) => setNewSuggestionText(e.target.value)}
+              placeholder="Add another suggestion"
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSuggestion())}
+              className="flex-1"
+            />
+            <Select value={newSuggestionType} onValueChange={(v) => setNewSuggestionType(v as SuggestionType)}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(suggestionTypeLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {suggestionTypeIcons[key as SuggestionType]} {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button type="button" variant="outline" size="icon" onClick={handleAddSuggestion}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Save mode selection */}
       {existingConnections.length > 0 && (
