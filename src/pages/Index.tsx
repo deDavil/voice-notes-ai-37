@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
 import { EmptyState } from '@/components/EmptyState';
 import { ConnectionCard } from '@/components/ConnectionCard';
 import { RecordingModal } from '@/components/RecordingModal';
+import { TagFilter } from '@/components/TagFilter';
 import { useConnections } from '@/hooks/useConnections';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Mic } from 'lucide-react';
@@ -13,7 +14,17 @@ import { Button } from '@/components/ui/button';
 const Index = () => {
   const navigate = useNavigate();
   const [recordingOpen, setRecordingOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { data: connections, isLoading } = useConnections();
+
+  const filteredConnections = useMemo(() => {
+    if (!connections) return [];
+    if (selectedTags.length === 0) return connections;
+    
+    return connections.filter(connection => 
+      selectedTags.every(tag => connection.tags?.includes(tag))
+    );
+  }, [connections, selectedTags]);
 
   const handleOpenRecording = () => setRecordingOpen(true);
   const handleSuccess = () => {
@@ -33,15 +44,42 @@ const Index = () => {
             ))}
           </div>
         ) : connections && connections.length > 0 ? (
-          <div className="space-y-4 animate-fade-in">
-            {connections.map((connection) => (
-              <ConnectionCard
-                key={connection.id}
-                connection={connection}
-                onClick={() => navigate(`/connection/${connection.id}`)}
-              />
-            ))}
-          </div>
+          <>
+            <TagFilter 
+              connections={connections}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+            />
+            
+            {selectedTags.length > 0 && (
+              <p className="text-sm text-muted-foreground mb-4">
+                Showing {filteredConnections.length} of {connections.length} connections
+              </p>
+            )}
+            
+            {filteredConnections.length > 0 ? (
+              <div className="space-y-4 animate-fade-in">
+                {filteredConnections.map((connection) => (
+                  <ConnectionCard
+                    key={connection.id}
+                    connection={connection}
+                    onClick={() => navigate(`/connection/${connection.id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>No connections match the selected filters.</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => setSelectedTags([])}
+                  className="mt-2"
+                >
+                  Clear filters
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <EmptyState onAddConnection={handleOpenRecording} />
         )}
