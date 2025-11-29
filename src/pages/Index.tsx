@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { Navigation } from '@/components/Navigation';
 import { EmptyState } from '@/components/EmptyState';
 import { ConnectionCard } from '@/components/ConnectionCard';
 import { RecordingModal } from '@/components/RecordingModal';
@@ -22,6 +23,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header onAddConnection={handleOpenRecording} />
+      <Navigation />
 
       <main className="container max-w-2xl mx-auto px-4 py-6">
         {isLoading ? (

@@ -65,6 +65,88 @@ export type Database = {
         }
         Relationships: []
       }
+      suggestions: {
+        Row: {
+          completed_at: string | null
+          connection_id: string
+          created_at: string
+          id: string
+          is_completed: boolean | null
+          text: string
+          type: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          connection_id: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          text: string
+          type: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          connection_id?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          text?: string
+          type?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      todos: {
+        Row: {
+          completed_at: string | null
+          connection_id: string
+          created_at: string
+          id: string
+          is_completed: boolean | null
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          connection_id: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          connection_id?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean | null
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "todos_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

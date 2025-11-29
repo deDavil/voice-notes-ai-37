@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useConnection, useUpdateConnection, useDeleteConnection } from '@/hooks/useConnections';
+import { useTodosByConnection, useUpdateTodo } from '@/hooks/useTodos';
+import { useSuggestionsByConnection, useUpdateSuggestion } from '@/hooks/useSuggestions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -34,10 +37,12 @@ import {
   X, 
   Plus,
   Calendar,
-  FileText
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { suggestionTypeIcons, SuggestionType } from '@/types/suggestion';
 
 const relationshipColors: Record<string, string> = {
   professional: 'bg-tag-professional/15 text-tag-professional border-tag-professional/30',
@@ -50,8 +55,12 @@ export default function ConnectionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: connection, isLoading } = useConnection(id);
+  const { data: todos } = useTodosByConnection(id);
+  const { data: suggestions } = useSuggestionsByConnection(id);
   const updateConnection = useUpdateConnection();
   const deleteConnection = useDeleteConnection();
+  const updateTodo = useUpdateTodo();
+  const updateSuggestion = useUpdateSuggestion();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
@@ -137,6 +146,14 @@ export default function ConnectionDetail() {
       ...prev,
       [field]: prev[field].filter((_: any, i: number) => i !== index),
     }));
+  };
+
+  const handleToggleTodo = (todoId: string, isCompleted: boolean) => {
+    updateTodo.mutate({ id: todoId, is_completed: !isCompleted });
+  };
+
+  const handleToggleSuggestion = (suggestionId: string, isCompleted: boolean) => {
+    updateSuggestion.mutate({ id: suggestionId, is_completed: !isCompleted });
   };
 
   if (isLoading) {
@@ -432,6 +449,67 @@ export default function ConnectionDetail() {
           </div>
         )}
 
+        {/* TO-DOs with this connection */}
+        {!isEditing && todos && todos.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-muted-foreground">TO-DOs with {connection.name || 'this person'}</Label>
+              <Link to="/todos" className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1">
+                View all TO-DOs <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {todos.slice(0, 3).map((todo) => (
+                <div key={todo.id} className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                  <Checkbox 
+                    checked={todo.is_completed}
+                    onCheckedChange={() => handleToggleTodo(todo.id, todo.is_completed)}
+                  />
+                  <span className={cn("text-sm flex-1", todo.is_completed && "line-through text-muted-foreground")}>
+                    {todo.text}
+                  </span>
+                </div>
+              ))}
+              {todos.length > 3 && (
+                <Link to="/todos" className="block text-sm text-muted-foreground hover:text-accent text-center py-2">
+                  +{todos.length - 3} more
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Suggestions from this connection */}
+        {!isEditing && suggestions && suggestions.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-muted-foreground">Suggestions from {connection.name || 'this person'}</Label>
+              <Link to="/suggestions" className="text-xs text-muted-foreground hover:text-accent flex items-center gap-1">
+                View all Suggestions <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {suggestions.slice(0, 3).map((suggestion) => (
+                <div key={suggestion.id} className="flex items-center gap-3 p-3 bg-card rounded-lg border">
+                  <Checkbox 
+                    checked={suggestion.is_completed}
+                    onCheckedChange={() => handleToggleSuggestion(suggestion.id, suggestion.is_completed)}
+                  />
+                  <span className="text-base">{suggestionTypeIcons[suggestion.type as SuggestionType]}</span>
+                  <span className={cn("text-sm flex-1", suggestion.is_completed && "line-through text-muted-foreground")}>
+                    {suggestion.text}
+                  </span>
+                </div>
+              ))}
+              {suggestions.length > 3 && (
+                <Link to="/suggestions" className="block text-sm text-muted-foreground hover:text-accent text-center py-2">
+                  +{suggestions.length - 3} more
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Additional Notes */}
         {(displayData.additional_notes || isEditing) && (
           <div className="space-y-2">
@@ -476,9 +554,10 @@ export default function ConnectionDetail() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this connection?</AlertDialogTitle>
+                  <AlertDialogTitle>Delete Connection</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete {connection.name || 'this connection'} and all associated information. This action cannot be undone.
+                    Are you sure you want to delete {connection.name || 'this connection'}? 
+                    This action cannot be undone. All associated TO-DOs and suggestions will also be deleted.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

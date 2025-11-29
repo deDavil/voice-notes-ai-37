@@ -28,6 +28,17 @@ async function processAudioData(base64Audio: string): Promise<ProcessedVoiceNote
 
 export type RecordingState = 'idle' | 'recording' | 'processing' | 'complete' | 'error';
 
+export interface ExtractedTodoFromVoice {
+  text: string;
+  context?: string;
+}
+
+export interface ExtractedSuggestionFromVoice {
+  text: string;
+  type: 'book' | 'podcast' | 'article' | 'tool' | 'course' | 'other';
+  context?: string;
+}
+
 export interface ProcessedVoiceNote {
   transcription: string;
   extracted: {
@@ -40,6 +51,8 @@ export interface ProcessedVoiceNote {
     suggested_tags: string[];
     follow_up_actions: string[];
     additional_context: string | null;
+    todos?: ExtractedTodoFromVoice[];
+    suggestions?: ExtractedSuggestionFromVoice[];
   } | null;
 }
 

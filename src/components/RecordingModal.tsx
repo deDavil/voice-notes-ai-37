@@ -9,9 +9,12 @@ import { RecordingInterface } from './RecordingInterface';
 import { ReviewForm } from './ReviewForm';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
 import { useConnections, useCreateConnection, useUpdateConnection } from '@/hooks/useConnections';
+import { useCreateTodos } from '@/hooks/useTodos';
+import { useCreateSuggestions } from '@/hooks/useSuggestions';
 import { AlertCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { Connection } from '@/types/connection';
+import { SuggestionType } from '@/types/suggestion';
 
 interface RecordingModalProps {
   open: boolean;
@@ -34,8 +37,9 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
   const { data: connections = [] } = useConnections();
   const createConnection = useCreateConnection();
   const updateConnection = useUpdateConnection();
+  const createTodos = useCreateTodos();
+  const createSuggestions = useCreateSuggestions();
 
-  // Reset when modal closes
   useEffect(() => {
     if (!open) {
       reset();
@@ -47,44 +51,60 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
     onOpenChange(false);
   };
 
-  const handleSave = (
+  const handleSave = async (
     data: Omit<Connection, 'id' | 'created_at' | 'updated_at'>, 
-    existingId?: string
+    existingId?: string,
+    todos?: { text: string }[],
+    suggestions?: { text: string; type: SuggestionType }[]
   ) => {
-    if (existingId) {
-      updateConnection.mutate(
-        { id: existingId, ...data },
-        {
-          onSuccess: () => {
-            handleClose();
-            onSuccess();
-          },
+    try {
+      let connectionId: string;
+
+      if (existingId) {
+        const existing = connections.find(c => c.id === existingId);
+        if (existing) {
+          await updateConnection.mutateAsync({
+            id: existingId,
+            ...data,
+            key_interests: [...new Set([...existing.key_interests, ...data.key_interests])],
+            important_facts: [...existing.important_facts, ...data.important_facts],
+            tags: [...new Set([...existing.tags, ...data.tags])],
+            follow_up_actions: [...existing.follow_up_actions, ...data.follow_up_actions],
+          });
         }
-      );
-    } else {
-      createConnection.mutate(data, {
-        onSuccess: () => {
-          handleClose();
-          onSuccess();
-        },
-      });
+        connectionId = existingId;
+      } else {
+        const newConnection = await createConnection.mutateAsync(data);
+        connectionId = newConnection.id;
+      }
+
+      if (todos && todos.length > 0) {
+        await createTodos.mutateAsync(
+          todos.map(t => ({ text: t.text, connection_id: connectionId }))
+        );
+      }
+
+      if (suggestions && suggestions.length > 0) {
+        await createSuggestions.mutateAsync(
+          suggestions.map(s => ({ text: s.text, type: s.type, connection_id: connectionId }))
+        );
+      }
+
+      handleClose();
+      onSuccess();
+    } catch (err) {
+      // Error handled by mutation hooks
     }
   };
 
   const getTitle = () => {
     switch (state) {
-      case 'idle':
-        return 'Record Voice Note';
-      case 'recording':
-        return 'Recording...';
-      case 'processing':
-        return 'Processing...';
-      case 'complete':
-        return 'Review & Save';
-      case 'error':
-        return 'Something went wrong';
-      default:
-        return 'Add Connection';
+      case 'idle': return 'Record Voice Note';
+      case 'recording': return 'Recording...';
+      case 'processing': return 'Processing...';
+      case 'complete': return 'Review & Save';
+      case 'error': return 'Something went wrong';
+      default: return 'Add Connection';
     }
   };
 
@@ -102,12 +122,8 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
             </div>
             <p className="text-muted-foreground mb-6">{error}</p>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={handleClose}>
-                Cancel
-              </Button>
-              <Button variant="accent" onClick={reset}>
-                Try Again
-              </Button>
+              <Button variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button variant="accent" onClick={reset}>Try Again</Button>
             </div>
           </div>
         )}
@@ -129,7 +145,7 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
             existingConnections={connections}
             onSave={handleSave}
             onCancel={handleClose}
-            isSaving={createConnection.isPending || updateConnection.isPending}
+            isSaving={createConnection.isPending || updateConnection.isPending || createTodos.isPending || createSuggestions.isPending}
           />
         )}
       </DialogContent>
