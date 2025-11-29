@@ -1,5 +1,6 @@
-import { Mic, Settings } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/NotificationBell';
 
 interface HeaderProps {
   onAddConnection: () => void;
@@ -19,15 +20,18 @@ export function Header({ onAddConnection }: HeaderProps) {
             </p>
           </div>
           
-          <Button 
-            variant="accent" 
-            size="sm"
-            onClick={onAddConnection}
-            className="gap-2"
-          >
-            <Mic className="w-4 h-4" />
-            <span className="hidden sm:inline">Add</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Button 
+              variant="accent" 
+              size="sm"
+              onClick={onAddConnection}
+              className="gap-2"
+            >
+              <Mic className="w-4 h-4" />
+              <span className="hidden sm:inline">Add</span>
+            </Button>
+          </div>
         </div>
       </div>
     </header>

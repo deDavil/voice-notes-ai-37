@@ -21,6 +21,8 @@ import {
 import { ChevronDown, X, Plus, Save, Loader2 } from 'lucide-react';
 import { Connection } from '@/types/connection';
 import { SuggestionType, suggestionTypeIcons, suggestionTypeLabels } from '@/types/suggestion';
+import { FollowUpFrequency, getSuggestedFrequency, calculateNextFollowUp } from '@/types/notification';
+import { FollowUpFrequencySelector } from '@/components/FollowUpFrequencySelector';
 import { cn } from '@/lib/utils';
 
 interface ExtractedTodoItem {
@@ -92,6 +94,11 @@ export function ReviewForm({
   const [saveMode, setSaveMode] = useState<'new' | 'existing'>('new');
   const [selectedConnectionId, setSelectedConnectionId] = useState<string>('');
   const [showTranscription, setShowTranscription] = useState(false);
+
+  // Follow-up frequency state
+  const suggestedFrequency = (extracted?.suggested_follow_up_frequency as FollowUpFrequency) || 
+    getSuggestedFrequency(formData.relationship_type);
+  const [followUpFrequency, setFollowUpFrequency] = useState<FollowUpFrequency>(suggestedFrequency);
 
   const handleAddTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -184,6 +191,9 @@ export function ReviewForm({
   };
 
   const handleSubmit = () => {
+    const now = new Date();
+    const nextFollowUp = calculateNextFollowUp(followUpFrequency, now);
+    
     const connectionData = {
       name: formData.name || null,
       how_we_met: formData.how_we_met || null,
@@ -196,6 +206,10 @@ export function ReviewForm({
       additional_notes: formData.additional_notes || null,
       original_transcription: data.transcription,
       is_favorite: false,
+      follow_up_frequency: followUpFrequency,
+      last_interaction_at: now.toISOString(),
+      next_follow_up_at: nextFollowUp?.toISOString() || null,
+      follow_up_enabled: followUpFrequency !== 'none',
     };
 
     const selectedTodos = extractedTodos.filter(t => t.selected).map(t => ({ text: t.text }));
@@ -486,6 +500,16 @@ export function ReviewForm({
           </div>
         </div>
       )}
+
+      {/* Follow-up Frequency */}
+      <div className="border-t pt-4">
+        <FollowUpFrequencySelector
+          value={followUpFrequency}
+          onChange={setFollowUpFrequency}
+          suggestedFrequency={suggestedFrequency}
+          suggestedReason={extracted?.frequency_reasoning}
+        />
+      </div>
 
       {/* Save mode selection */}
       {existingConnections.length > 0 && (

@@ -1,3 +1,5 @@
+import { FollowUpFrequency } from './notification';
+
 export interface Connection {
   id: string;
   created_at: string;
@@ -13,6 +15,10 @@ export interface Connection {
   additional_notes: string | null;
   original_transcription: string | null;
   is_favorite: boolean;
+  follow_up_frequency: FollowUpFrequency;
+  last_interaction_at: string | null;
+  next_follow_up_at: string | null;
+  follow_up_enabled: boolean;
 }
 
 export interface ExtractedData {
