@@ -70,61 +70,139 @@ serve(async (req) => {
     // Step 2: Extract structured data with AI
     console.log('Starting AI extraction...');
 
-    const extractionPrompt = `You are an assistant that extracts structured information from voice note transcriptions about people someone has met.
+    const extractionPrompt = `You are extracting ONLY high-value, lasting information from a voice note about someone the user met or spoke with.
 
-Given this transcription, extract the following information. If something is not mentioned, leave it as null or empty array. Do not make up information that isn't stated or clearly implied.
-
-Transcription:
+TRANSCRIPTION:
 """
 ${transcription}
 """
 
-Return a JSON object with these fields:
-{
-  "name": "string or null - the person's name",
-  "how_we_met": "string or null - context of meeting (event, location, introduction)",
-  "profession_or_role": "string or null - their job, role, or what they do",
-  "key_interests": ["array of strings - hobbies, interests, passions mentioned"],
-  "important_facts": ["array of strings - notable things about them"],
-  "relationship_type": "string - one of: professional, personal, networking, other",
-  "suggested_tags": ["array of strings - relevant tags based on context"],
-  "follow_up_actions": ["array of strings - any mentioned next steps or todos"],
-  "additional_context": "string or null - any other relevant information",
-  "todos": [
-    {
-      "text": "concrete action item to do",
-      "context": "brief context if helpful"
-    }
-  ],
-  "suggestions": [
-    {
-      "text": "name of book/podcast/article/tool",
-      "type": "book|podcast|article|tool|course|other",
-      "context": "why they recommended it"
-    }
-  ],
-  "suggested_follow_up_frequency": "weekly|biweekly|monthly|quarterly",
-  "frequency_reasoning": "brief explanation for the suggested frequency"
-}
+CRITICAL RULES - READ CAREFULLY:
 
-EXTRACTION RULES FOR TODOS:
-- Extract concrete actions the user should take
-- Examples: "send them X", "introduce them to Y", "follow up about Z", "share the document"
-- Do NOT include vague items like "stay in touch"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMPORTANT FACTS - Only extract LASTING information about the person
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-EXTRACTION RULES FOR SUGGESTIONS:
-- Extract specific recommendations the person made
-- Books, podcasts, articles, tools, courses, people to meet
-- Include the name/title if mentioned
-- Infer type from context (e.g., "read X" = book, "listen to X" = podcast)
+✅ INCLUDE:
+- Family structure (spouse name, children names/ages)
+- Profession, company, role
+- Where they live (city/neighborhood)
+- Long-term interests or hobbies
+- Significant life facts (alma mater, hometown, major achievements)
+- Health conditions or important personal circumstances
 
-FOLLOW-UP FREQUENCY RULES:
+❌ EXCLUDE:
+- Temporary situations ("busy this week", "traveling for work")
+- One-time events ("had a playdate Saturday")
+- Object descriptions ("purple unicorn with sparkly horn")
+- Current mood or feelings
+- Anything that won't matter in 3 months
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TO-DOs - Only extract CONCRETE COMMITMENTS you must act on
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ INCLUDE:
+- Specific promised actions ("send the pitch deck", "make an intro")
+- Agreed deliverables with clear outcomes
+- Committed meetings or follow-ups
+
+❌ EXCLUDE:
+- Vague intentions ("stay in touch", "catch up sometime")
+- Multiple options for the same task (pick the most likely one)
+- The other person's tasks (only YOUR action items)
+- Wishes without commitment ("we should do coffee")
+
+CONSOLIDATION RULE: If multiple options are given for ONE task, extract as ONE to-do with the most concrete option.
+Example: "drop off Friday or meet Saturday" → Single TO-DO: "Return item (Saturday park meetup or Friday drop-off)"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUGGESTIONS - Only extract EXPLICIT recommendations
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ INCLUDE:
+- Specific book/podcast/article titles they recommended
+- Tools or products they suggested you try
+- People they said you should meet
+
+❌ EXCLUDE:
+- Things they mentioned using (unless explicitly recommended)
+- General topics discussed (not recommendations)
+- Anything without a specific name/title
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAGS - Maximum 3-4 most relevant tags
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Select from:
+- Relationship: professional, personal, networking, mentor, client, investor, founder
+- Industry: tech, finance, healthcare, creative, education, legal, marketing, design
+- Context: conference, meetup, introduction, work, social, alumni, referral
+
+RULES:
+- Maximum 4 tags total
+- Prioritize: 1 relationship tag + 1-2 most specific descriptors
+- Don't tag obvious things (e.g., don't tag "friend" if already "personal")
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOLLOW-UP ACTIONS - Brief, actionable next steps
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ INCLUDE:
+- Confirmed plans with time/place
+- Agreed next conversations or meetings
+- Maximum 2 items
+
+❌ EXCLUDE:
+- Duplicates of TO-DOs
+- Vague "maybe" plans
+- Wishes without agreement
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FOLLOW-UP FREQUENCY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 Based on the relationship context, suggest a follow-up frequency:
 - "weekly" for: clients, warm leads, active deals, urgent collaborations
 - "biweekly" for: investors, founders, active collaborators, mentors
 - "monthly" for: general professional contacts, personal friends, mentees
 - "quarterly" for: casual networking contacts, one-time meetings, distant connections
-Return your suggestion in "suggested_follow_up_frequency" with brief reasoning in "frequency_reasoning".
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Return JSON:
+{
+  "name": "string or null",
+  "how_we_met": "string or null - brief context, one sentence max",
+  "profession_or_role": "string or null",
+  "key_interests": ["max 3 lasting interests or hobbies"],
+  "important_facts": ["max 3-4 LASTING facts that will matter in 3+ months"],
+  "relationship_type": "professional|personal|networking|other",
+  "suggested_tags": ["max 4 tags"],
+  "follow_up_actions": ["max 2 concrete next steps"],
+  "todos": [
+    {
+      "text": "single consolidated action item",
+      "context": "brief context if helpful"
+    }
+  ],
+  "suggestions": [
+    {
+      "text": "specific title or name",
+      "type": "book|podcast|article|tool|course|person|other",
+      "context": "why they recommended it"
+    }
+  ],
+  "suggested_follow_up_frequency": "weekly|biweekly|monthly|quarterly",
+  "frequency_reasoning": "brief explanation for the suggested frequency",
+  "additional_context": "1-2 sentence summary of conversation context, only if adds value - otherwise null"
+}
+
+FINAL CHECK before responding:
+1. Would each "important fact" still matter in 3 months? If no, remove it.
+2. Are there duplicate TO-DOs? Consolidate them.
+3. Are there more than 4 tags? Remove the least specific ones.
+4. Is "additional_context" just repeating other fields? If yes, set to null.
 
 Only return the JSON object, no other text.`;
 
