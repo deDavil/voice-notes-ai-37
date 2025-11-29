@@ -17,63 +17,111 @@ export type Database = {
       connections: {
         Row: {
           additional_notes: string | null
+          birthday: string | null
+          company: string | null
+          company_website: string | null
           created_at: string
+          email: string | null
           follow_up_actions: string[] | null
           follow_up_enabled: boolean | null
           follow_up_frequency: string | null
+          how_i_can_help: string | null
+          how_they_can_help: string | null
           how_we_met: string | null
           id: string
           important_facts: string[] | null
+          instagram_url: string | null
+          introduced_by: string | null
           is_favorite: boolean | null
           key_interests: string[] | null
           last_interaction_at: string | null
+          linkedin_url: string | null
+          location: string | null
           name: string | null
           next_follow_up_at: string | null
           original_transcription: string | null
+          phone: string | null
+          photo_url: string | null
+          priority: string | null
           profession_or_role: string | null
           relationship_type: string | null
           tags: string[] | null
+          twitter_url: string | null
           updated_at: string
+          warmth_level: string | null
+          website_url: string | null
         }
         Insert: {
           additional_notes?: string | null
+          birthday?: string | null
+          company?: string | null
+          company_website?: string | null
           created_at?: string
+          email?: string | null
           follow_up_actions?: string[] | null
           follow_up_enabled?: boolean | null
           follow_up_frequency?: string | null
+          how_i_can_help?: string | null
+          how_they_can_help?: string | null
           how_we_met?: string | null
           id?: string
           important_facts?: string[] | null
+          instagram_url?: string | null
+          introduced_by?: string | null
           is_favorite?: boolean | null
           key_interests?: string[] | null
           last_interaction_at?: string | null
+          linkedin_url?: string | null
+          location?: string | null
           name?: string | null
           next_follow_up_at?: string | null
           original_transcription?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          priority?: string | null
           profession_or_role?: string | null
           relationship_type?: string | null
           tags?: string[] | null
+          twitter_url?: string | null
           updated_at?: string
+          warmth_level?: string | null
+          website_url?: string | null
         }
         Update: {
           additional_notes?: string | null
+          birthday?: string | null
+          company?: string | null
+          company_website?: string | null
           created_at?: string
+          email?: string | null
           follow_up_actions?: string[] | null
           follow_up_enabled?: boolean | null
           follow_up_frequency?: string | null
+          how_i_can_help?: string | null
+          how_they_can_help?: string | null
           how_we_met?: string | null
           id?: string
           important_facts?: string[] | null
+          instagram_url?: string | null
+          introduced_by?: string | null
           is_favorite?: boolean | null
           key_interests?: string[] | null
           last_interaction_at?: string | null
+          linkedin_url?: string | null
+          location?: string | null
           name?: string | null
           next_follow_up_at?: string | null
           original_transcription?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          priority?: string | null
           profession_or_role?: string | null
           relationship_type?: string | null
           tags?: string[] | null
+          twitter_url?: string | null
           updated_at?: string
+          warmth_level?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }

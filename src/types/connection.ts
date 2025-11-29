@@ -19,6 +19,23 @@ export interface Connection {
   last_interaction_at: string | null;
   next_follow_up_at: string | null;
   follow_up_enabled: boolean;
+  // New expanded fields
+  photo_url: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  birthday: string | null;
+  company: string | null;
+  company_website: string | null;
+  linkedin_url: string | null;
+  twitter_url: string | null;
+  instagram_url: string | null;
+  website_url: string | null;
+  introduced_by: string | null;
+  how_i_can_help: string | null;
+  how_they_can_help: string | null;
+  warmth_level: WarmthLevel;
+  priority: PriorityLevel;
 }
 
 export interface ExtractedData {
@@ -34,3 +51,19 @@ export interface ExtractedData {
 }
 
 export type RelationshipType = 'professional' | 'personal' | 'networking' | 'other';
+export type WarmthLevel = 'cold' | 'neutral' | 'warm' | 'hot';
+export type PriorityLevel = 'low' | 'normal' | 'high' | 'vip';
+
+export const WARMTH_OPTIONS = [
+  { value: 'cold', label: 'Cold', emoji: '🧊' },
+  { value: 'neutral', label: 'Neutral', emoji: '😐' },
+  { value: 'warm', label: 'Warm', emoji: '🔥' },
+  { value: 'hot', label: 'Hot', emoji: '⚡' },
+] as const;
+
+export const PRIORITY_OPTIONS = [
+  { value: 'low', label: 'Low' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'high', label: 'High' },
+  { value: 'vip', label: 'VIP', emoji: '⭐' },
+] as const;

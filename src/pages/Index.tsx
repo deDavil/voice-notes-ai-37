@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
 import { EmptyState } from '@/components/EmptyState';
-import { ConnectionCard } from '@/components/ConnectionCard';
 import { RecordingModal } from '@/components/RecordingModal';
 import { TagFilter } from '@/components/TagFilter';
 import { CategoryFilter } from '@/components/CategoryFilter';
+import { ViewSwitcher, ViewMode } from '@/components/ViewSwitcher';
+import { SearchInput } from '@/components/SearchInput';
+import { ConnectionListView } from '@/components/ConnectionListView';
+import { ConnectionGalleryView } from '@/components/ConnectionGalleryView';
+import { ConnectionTableView } from '@/components/ConnectionTableView';
 import { useConnections } from '@/hooks/useConnections';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Mic } from 'lucide-react';
@@ -19,12 +23,33 @@ const Index = () => {
   const [recordingOpen, setRecordingOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<CategoryType>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    return (localStorage.getItem('connections-view') as ViewMode) || 'list';
+  });
   const { data: connections, isLoading } = useConnections();
+
+  const handleViewChange = (view: ViewMode) => {
+    setViewMode(view);
+    localStorage.setItem('connections-view', view);
+  };
 
   const filteredConnections = useMemo(() => {
     if (!connections) return [];
     
     let result = connections;
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(connection => 
+        connection.name?.toLowerCase().includes(query) ||
+        connection.profession_or_role?.toLowerCase().includes(query) ||
+        connection.company?.toLowerCase().includes(query) ||
+        connection.location?.toLowerCase().includes(query) ||
+        connection.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
     
     // Apply category filter
     if (categoryFilter !== 'all') {
@@ -41,13 +66,17 @@ const Index = () => {
     }
     
     return result;
-  }, [connections, selectedTags, categoryFilter]);
+  }, [connections, selectedTags, categoryFilter, searchQuery]);
 
-  const hasActiveFilters = selectedTags.length > 0 || categoryFilter !== 'all';
+  const hasActiveFilters = selectedTags.length > 0 || categoryFilter !== 'all' || searchQuery.trim();
 
   const handleOpenRecording = () => setRecordingOpen(true);
   const handleSuccess = () => {
     // Could navigate to the new connection, but for now just close
+  };
+
+  const handleConnectionClick = (id: string) => {
+    navigate(`/connection/${id}`);
   };
 
   return (
@@ -55,7 +84,7 @@ const Index = () => {
       <Header onAddConnection={handleOpenRecording} />
       <Navigation />
 
-      <main className="container max-w-2xl mx-auto px-4 py-6">
+      <main className="container max-w-4xl mx-auto px-4 py-6">
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
@@ -64,10 +93,21 @@ const Index = () => {
           </div>
         ) : connections && connections.length > 0 ? (
           <>
-            <CategoryFilter 
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-            />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <CategoryFilter 
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+              />
+              <div className="flex items-center gap-3">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Search connections..."
+                  className="w-full sm:w-64"
+                />
+                <ViewSwitcher currentView={viewMode} onChange={handleViewChange} />
+              </div>
+            </div>
             
             <TagFilter 
               connections={connections}
@@ -82,21 +122,36 @@ const Index = () => {
             )}
             
             {filteredConnections.length > 0 ? (
-              <div className="space-y-4 animate-fade-in">
-                {filteredConnections.map((connection) => (
-                  <ConnectionCard
-                    key={connection.id}
-                    connection={connection}
-                    onClick={() => navigate(`/connection/${connection.id}`)}
+              <div className="animate-fade-in">
+                {viewMode === 'list' && (
+                  <ConnectionListView
+                    connections={filteredConnections}
+                    onConnectionClick={handleConnectionClick}
                   />
-                ))}
+                )}
+                {viewMode === 'gallery' && (
+                  <ConnectionGalleryView
+                    connections={filteredConnections}
+                    onConnectionClick={handleConnectionClick}
+                  />
+                )}
+                {viewMode === 'table' && (
+                  <ConnectionTableView
+                    connections={filteredConnections}
+                    onConnectionClick={handleConnectionClick}
+                  />
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <p>No connections match the selected filters.</p>
                 <Button 
                   variant="link" 
-                  onClick={() => setSelectedTags([])}
+                  onClick={() => {
+                    setSelectedTags([]);
+                    setSearchQuery('');
+                    setCategoryFilter('all');
+                  }}
                   className="mt-2"
                 >
                   Clear filters

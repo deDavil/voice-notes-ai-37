@@ -210,6 +210,23 @@ export function ReviewForm({
       last_interaction_at: now.toISOString(),
       next_follow_up_at: nextFollowUp?.toISOString() || null,
       follow_up_enabled: followUpFrequency !== 'none',
+      // New expanded fields - set to defaults for new connections
+      photo_url: null,
+      email: null,
+      phone: null,
+      location: null,
+      birthday: null,
+      company: null,
+      company_website: null,
+      linkedin_url: null,
+      twitter_url: null,
+      instagram_url: null,
+      website_url: null,
+      introduced_by: null,
+      how_i_can_help: null,
+      how_they_can_help: null,
+      warmth_level: 'neutral' as const,
+      priority: 'normal' as const,
     };
 
     const selectedTodos = extractedTodos.filter(t => t.selected).map(t => ({ text: t.text }));

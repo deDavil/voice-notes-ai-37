@@ -41,12 +41,25 @@ import {
   FileText,
   ChevronRight,
   Bell,
-  MessageCircle
+  MessageCircle,
+  Mail,
+  Phone,
+  MapPin,
+  Cake,
+  Building2,
+  Globe,
+  Copy,
+  Check
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { suggestionTypeIcons, SuggestionType } from '@/types/suggestion';
 import { FREQUENCY_OPTIONS, FREQUENCY_LABELS, FollowUpFrequency, calculateNextFollowUp } from '@/types/notification';
+import { WarmthLevel, PriorityLevel, WARMTH_OPTIONS, PRIORITY_OPTIONS } from '@/types/connection';
+import { PhotoUpload } from '@/components/PhotoUpload';
+import { SocialLinks } from '@/components/SocialLinks';
+import { WarmthBadge } from '@/components/WarmthBadge';
+import { PriorityBadge } from '@/components/PriorityBadge';
 
 const relationshipColors: Record<string, string> = {
   professional: 'bg-tag-professional/15 text-tag-professional border-tag-professional/30',
@@ -73,6 +86,7 @@ export default function ConnectionDetail() {
   const [newInterest, setNewInterest] = useState('');
   const [newFact, setNewFact] = useState('');
   const [newAction, setNewAction] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const startEditing = () => {
     if (connection) {
@@ -80,15 +94,32 @@ export default function ConnectionDetail() {
         name: connection.name || '',
         how_we_met: connection.how_we_met || '',
         profession_or_role: connection.profession_or_role || '',
-        key_interests: [...connection.key_interests],
-        important_facts: [...connection.important_facts],
+        key_interests: [...(connection.key_interests || [])],
+        important_facts: [...(connection.important_facts || [])],
         relationship_type: connection.relationship_type,
-        tags: [...connection.tags],
-        follow_up_actions: [...connection.follow_up_actions],
+        tags: [...(connection.tags || [])],
+        follow_up_actions: [...(connection.follow_up_actions || [])],
         additional_notes: connection.additional_notes || '',
         is_favorite: connection.is_favorite,
         follow_up_frequency: connection.follow_up_frequency || 'monthly',
         follow_up_enabled: connection.follow_up_enabled ?? true,
+        // New fields
+        photo_url: connection.photo_url || '',
+        email: connection.email || '',
+        phone: connection.phone || '',
+        location: connection.location || '',
+        birthday: connection.birthday || '',
+        company: connection.company || '',
+        company_website: connection.company_website || '',
+        linkedin_url: connection.linkedin_url || '',
+        twitter_url: connection.twitter_url || '',
+        instagram_url: connection.instagram_url || '',
+        website_url: connection.website_url || '',
+        introduced_by: connection.introduced_by || '',
+        how_i_can_help: connection.how_i_can_help || '',
+        how_they_can_help: connection.how_they_can_help || '',
+        warmth_level: connection.warmth_level || 'neutral',
+        priority: connection.priority || 'normal',
       });
       setIsEditing(true);
     }
@@ -122,6 +153,23 @@ export default function ConnectionDetail() {
         follow_up_frequency: formData.follow_up_frequency,
         follow_up_enabled: formData.follow_up_enabled,
         next_follow_up_at: nextFollowUp?.toISOString() || null,
+        // New fields
+        photo_url: formData.photo_url || null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        location: formData.location || null,
+        birthday: formData.birthday || null,
+        company: formData.company || null,
+        company_website: formData.company_website || null,
+        linkedin_url: formData.linkedin_url || null,
+        twitter_url: formData.twitter_url || null,
+        instagram_url: formData.instagram_url || null,
+        website_url: formData.website_url || null,
+        introduced_by: formData.introduced_by || null,
+        how_i_can_help: formData.how_i_can_help || null,
+        how_they_can_help: formData.how_they_can_help || null,
+        warmth_level: formData.warmth_level,
+        priority: formData.priority,
       },
       {
         onSuccess: () => {
@@ -147,6 +195,12 @@ export default function ConnectionDetail() {
   const toggleFavorite = () => {
     if (!connection || !id) return;
     updateConnection.mutate({ id, is_favorite: !connection.is_favorite });
+  };
+
+  const handleCopy = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   // Array manipulation helpers
@@ -259,75 +313,178 @@ export default function ConnectionDetail() {
       </header>
 
       <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6 animate-fade-in">
-        {/* Name and basic info */}
-        <div className="space-y-4">
+        {/* Profile Header */}
+        <div className="flex gap-6">
           {isEditing ? (
-            <>
-              <div>
-                <Label>Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData((p: any) => ({ ...p, name: e.target.value }))}
-                  placeholder="Person's name"
-                  className="text-xl font-semibold"
-                />
+            <PhotoUpload
+              currentUrl={formData.photo_url}
+              onUpload={(url) => setFormData((p: any) => ({ ...p, photo_url: url }))}
+              name={formData.name}
+            />
+          ) : (
+            <PhotoUpload
+              currentUrl={connection.photo_url}
+              name={connection.name}
+              disabled
+            />
+          )}
+          
+          <div className="flex-1 min-w-0">
+            {isEditing ? (
+              <Input
+                value={formData.name}
+                onChange={(e) => setFormData((p: any) => ({ ...p, name: e.target.value }))}
+                placeholder="Person's name"
+                className="text-2xl font-bold mb-2"
+              />
+            ) : (
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl font-bold text-foreground truncate">
+                  {connection.name || 'Unknown'}
+                </h1>
+                <PriorityBadge level={connection.priority} />
               </div>
-              <div>
-                <Label>How We Met</Label>
-                <Input
-                  value={formData.how_we_met}
-                  onChange={(e) => setFormData((p: any) => ({ ...p, how_we_met: e.target.value }))}
-                  placeholder="Event, location, or context"
-                />
-              </div>
-              <div>
-                <Label>Role / Profession</Label>
+            )}
+            
+            {isEditing ? (
+              <div className="grid grid-cols-2 gap-2">
                 <Input
                   value={formData.profession_or_role}
                   onChange={(e) => setFormData((p: any) => ({ ...p, profession_or_role: e.target.value }))}
-                  placeholder="What they do"
+                  placeholder="Role / Title"
+                />
+                <Input
+                  value={formData.company}
+                  onChange={(e) => setFormData((p: any) => ({ ...p, company: e.target.value }))}
+                  placeholder="Company"
                 />
               </div>
-              <div>
-                <Label>Relationship Type</Label>
-                <Select
-                  value={formData.relationship_type}
-                  onValueChange={(v) => setFormData((p: any) => ({ ...p, relationship_type: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="personal">Personal</SelectItem>
-                    <SelectItem value="networking">Networking</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+            ) : (
+              <p className="text-muted-foreground">
+                {connection.profession_or_role}
+                {connection.company && ` at ${connection.company}`}
+              </p>
+            )}
+            
+            {!isEditing && connection.location && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                <MapPin className="w-3 h-3" />
+                {connection.location}
+              </p>
+            )}
+            
+            {!isEditing && (
+              <div className="flex items-center gap-2 mt-2">
+                <WarmthBadge level={connection.warmth_level} />
+                {connection.introduced_by && (
+                  <span className="text-xs text-muted-foreground">
+                    Via: {connection.introduced_by}
+                  </span>
+                )}
               </div>
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-bold text-foreground">
-                {connection.name || 'Unknown'}
-              </h1>
-              {connection.profession_or_role && (
-                <p className="text-lg text-muted-foreground">
-                  {connection.profession_or_role}
-                </p>
-              )}
-              {connection.how_we_met && (
-                <p className="text-muted-foreground">
-                  Met at {connection.how_we_met}
-                </p>
-              )}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                Added {format(new Date(connection.created_at), 'MMMM d, yyyy')}
-              </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Contact Info (View Mode) */}
+        {!isEditing && (connection.email || connection.phone || connection.birthday) && (
+          <div className="p-4 bg-card rounded-xl border space-y-2">
+            {connection.email && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <a href={`mailto:${connection.email}`} className="text-foreground hover:text-primary">
+                    {connection.email}
+                  </a>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy(connection.email!, 'email')}>
+                  {copiedField === 'email' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            )}
+            {connection.phone && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <a href={`tel:${connection.phone}`} className="text-foreground hover:text-primary">
+                    {connection.phone}
+                  </a>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy(connection.phone!, 'phone')}>
+                  {copiedField === 'phone' ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            )}
+            {connection.birthday && (
+              <div className="flex items-center gap-2 text-sm">
+                <Cake className="w-4 h-4 text-muted-foreground" />
+                <span>{format(new Date(connection.birthday), 'MMMM d')}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Social Links (View Mode) */}
+        {!isEditing && (
+          <SocialLinks
+            linkedin={connection.linkedin_url}
+            twitter={connection.twitter_url}
+            instagram={connection.instagram_url}
+            website={connection.website_url}
+          />
+        )}
+
+        {/* Contact & Social Edit Section */}
+        {isEditing && (
+          <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
+            <h3 className="text-sm font-semibold text-muted-foreground">Contact & Social</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                value={formData.email}
+                onChange={(e) => setFormData((p: any) => ({ ...p, email: e.target.value }))}
+                placeholder="Email"
+                type="email"
+              />
+              <Input
+                value={formData.phone}
+                onChange={(e) => setFormData((p: any) => ({ ...p, phone: e.target.value }))}
+                placeholder="Phone"
+                type="tel"
+              />
+              <Input
+                value={formData.location}
+                onChange={(e) => setFormData((p: any) => ({ ...p, location: e.target.value }))}
+                placeholder="City, Country"
+              />
+              <Input
+                value={formData.birthday}
+                onChange={(e) => setFormData((p: any) => ({ ...p, birthday: e.target.value }))}
+                placeholder="Birthday"
+                type="date"
+              />
+              <Input
+                value={formData.linkedin_url}
+                onChange={(e) => setFormData((p: any) => ({ ...p, linkedin_url: e.target.value }))}
+                placeholder="LinkedIn URL"
+              />
+              <Input
+                value={formData.twitter_url}
+                onChange={(e) => setFormData((p: any) => ({ ...p, twitter_url: e.target.value }))}
+                placeholder="Twitter URL"
+              />
+              <Input
+                value={formData.instagram_url}
+                onChange={(e) => setFormData((p: any) => ({ ...p, instagram_url: e.target.value }))}
+                placeholder="Instagram URL"
+              />
+              <Input
+                value={formData.website_url}
+                onChange={(e) => setFormData((p: any) => ({ ...p, website_url: e.target.value }))}
+                placeholder="Personal Website"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Follow-up Reminders */}
         {!isEditing && connection.follow_up_frequency !== 'none' && connection.follow_up_enabled && (
@@ -372,36 +529,164 @@ export default function ConnectionDetail() {
           </div>
         )}
 
-        {/* Follow-up Settings (Edit Mode) */}
+        {/* Follow-up & Relationship Settings (Edit Mode) */}
         {isEditing && (
-          <div className="space-y-3">
-            <Label className="text-muted-foreground">Follow-up Reminders</Label>
-            <div className="flex items-center gap-4">
-              <Checkbox
-                id="follow_up_enabled"
-                checked={formData?.follow_up_enabled}
-                onCheckedChange={(checked) => setFormData((p: any) => ({ ...p, follow_up_enabled: !!checked }))}
-              />
-              <label htmlFor="follow_up_enabled" className="text-sm">
-                Enable follow-up reminders
-              </label>
+          <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
+            <h3 className="text-sm font-semibold text-muted-foreground">Relationship Settings</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Relationship Type</Label>
+                <Select
+                  value={formData.relationship_type}
+                  onValueChange={(v) => setFormData((p: any) => ({ ...p, relationship_type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="networking">Networking</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Introduced By</Label>
+                <Input
+                  value={formData.introduced_by}
+                  onChange={(e) => setFormData((p: any) => ({ ...p, introduced_by: e.target.value }))}
+                  placeholder="Who connected you?"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Warmth Level</Label>
+                <Select
+                  value={formData.warmth_level}
+                  onValueChange={(v) => setFormData((p: any) => ({ ...p, warmth_level: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WARMTH_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.emoji} {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Priority</Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(v) => setFormData((p: any) => ({ ...p, priority: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRIORITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {'emoji' in opt && opt.emoji} {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            {formData?.follow_up_enabled && (
-              <Select
-                value={formData?.follow_up_frequency || 'monthly'}
-                onValueChange={(v) => setFormData((p: any) => ({ ...p, follow_up_frequency: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {FREQUENCY_OPTIONS.filter(f => f.value !== 'none').map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            <div className="pt-2">
+              <div className="flex items-center gap-4 mb-2">
+                <Checkbox
+                  id="follow_up_enabled"
+                  checked={formData?.follow_up_enabled}
+                  onCheckedChange={(checked) => setFormData((p: any) => ({ ...p, follow_up_enabled: !!checked }))}
+                />
+                <label htmlFor="follow_up_enabled" className="text-sm">
+                  Enable follow-up reminders
+                </label>
+              </div>
+              {formData?.follow_up_enabled && (
+                <Select
+                  value={formData?.follow_up_frequency || 'monthly'}
+                  onValueChange={(v) => setFormData((p: any) => ({ ...p, follow_up_frequency: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FREQUENCY_OPTIONS.filter(f => f.value !== 'none').map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* How We Met */}
+        {(displayData.how_we_met || isEditing) && (
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">How We Met</Label>
+            {isEditing ? (
+              <Input
+                value={formData.how_we_met}
+                onChange={(e) => setFormData((p: any) => ({ ...p, how_we_met: e.target.value }))}
+                placeholder="Event, location, or context"
+              />
+            ) : (
+              <p className="text-sm text-foreground bg-card p-3 rounded-lg border">
+                {connection.how_we_met}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Value Exchange */}
+        {(displayData.how_i_can_help || displayData.how_they_can_help || isEditing) && (
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">Value Exchange</Label>
+            {isEditing ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">How I Can Help</Label>
+                  <Textarea
+                    value={formData.how_i_can_help}
+                    onChange={(e) => setFormData((p: any) => ({ ...p, how_i_can_help: e.target.value }))}
+                    placeholder="What value can you provide?"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">How They Can Help</Label>
+                  <Textarea
+                    value={formData.how_they_can_help}
+                    onChange={(e) => setFormData((p: any) => ({ ...p, how_they_can_help: e.target.value }))}
+                    placeholder="What can they offer you?"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {connection.how_i_can_help && (
+                  <div className="p-3 bg-card rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">How I Can Help</p>
+                    <p className="text-sm">{connection.how_i_can_help}</p>
+                  </div>
+                )}
+                {connection.how_they_can_help && (
+                  <div className="p-3 bg-card rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">How They Can Help</p>
+                    <p className="text-sm">{connection.how_they_can_help}</p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -419,7 +704,7 @@ export default function ConnectionDetail() {
             >
               {displayData.relationship_type}
             </Badge>
-            {displayData.tags.map((tag: string, i: number) => (
+            {displayData.tags?.map((tag: string, i: number) => (
               <Badge key={i} variant="secondary" className="gap-1">
                 {tag}
                 {isEditing && (
@@ -447,11 +732,11 @@ export default function ConnectionDetail() {
         </div>
 
         {/* Key Interests */}
-        {(displayData.key_interests.length > 0 || isEditing) && (
+        {(displayData.key_interests?.length > 0 || isEditing) && (
           <div className="space-y-2">
             <Label className="text-muted-foreground">Interests</Label>
             <div className="flex flex-wrap gap-2">
-              {displayData.key_interests.map((interest: string, i: number) => (
+              {displayData.key_interests?.map((interest: string, i: number) => (
                 <Badge key={i} variant="outline" className="gap-1">
                   {interest}
                   {isEditing && (
@@ -480,11 +765,11 @@ export default function ConnectionDetail() {
         )}
 
         {/* Important Facts */}
-        {(displayData.important_facts.length > 0 || isEditing) && (
+        {(displayData.important_facts?.length > 0 || isEditing) && (
           <div className="space-y-2">
             <Label className="text-muted-foreground">Important Facts</Label>
             <div className="space-y-2">
-              {displayData.important_facts.map((fact: string, i: number) => (
+              {displayData.important_facts?.map((fact: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 p-3 bg-card rounded-lg border">
                   <span className="text-sm flex-1">{fact}</span>
                   {isEditing && (
@@ -513,11 +798,11 @@ export default function ConnectionDetail() {
         )}
 
         {/* Follow-up Actions */}
-        {(displayData.follow_up_actions.length > 0 || isEditing) && (
+        {(displayData.follow_up_actions?.length > 0 || isEditing) && (
           <div className="space-y-2">
             <Label className="text-muted-foreground">Follow-up Actions</Label>
             <div className="space-y-2">
-              {displayData.follow_up_actions.map((action: string, i: number) => (
+              {displayData.follow_up_actions?.map((action: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 p-3 bg-accent/10 rounded-lg border border-accent/20">
                   <span className="text-sm flex-1">{action}</span>
                   {isEditing && (
@@ -638,9 +923,17 @@ export default function ConnectionDetail() {
           </div>
         )}
 
+        {/* Date Added */}
+        {!isEditing && (
+          <div className="flex items-center text-sm text-muted-foreground pt-4 border-t">
+            <Calendar className="w-4 h-4 mr-2" />
+            Added {format(new Date(connection.created_at), 'MMMM d, yyyy')}
+          </div>
+        )}
+
         {/* Delete Button */}
         {!isEditing && (
-          <div className="pt-6 border-t">
+          <div className="pt-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2">
