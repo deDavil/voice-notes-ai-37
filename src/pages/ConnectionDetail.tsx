@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useConnection, useUpdateConnection, useDeleteConnection } from '@/hooks/useConnections';
 import { useTodosByConnection, useUpdateTodo } from '@/hooks/useTodos';
 import { useSuggestionsByConnection, useUpdateSuggestion } from '@/hooks/useSuggestions';
+import { useLogInteraction } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,11 +39,14 @@ import {
   Plus,
   Calendar,
   FileText,
-  ChevronRight
+  ChevronRight,
+  Bell,
+  MessageCircle
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { suggestionTypeIcons, SuggestionType } from '@/types/suggestion';
+import { FREQUENCY_OPTIONS, FREQUENCY_LABELS, FollowUpFrequency, calculateNextFollowUp } from '@/types/notification';
 
 const relationshipColors: Record<string, string> = {
   professional: 'bg-tag-professional/15 text-tag-professional border-tag-professional/30',
@@ -61,6 +65,7 @@ export default function ConnectionDetail() {
   const deleteConnection = useDeleteConnection();
   const updateTodo = useUpdateTodo();
   const updateSuggestion = useUpdateSuggestion();
+  const logInteraction = useLogInteraction();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
@@ -82,6 +87,8 @@ export default function ConnectionDetail() {
         follow_up_actions: [...connection.follow_up_actions],
         additional_notes: connection.additional_notes || '',
         is_favorite: connection.is_favorite,
+        follow_up_frequency: connection.follow_up_frequency || 'monthly',
+        follow_up_enabled: connection.follow_up_enabled ?? true,
       });
       setIsEditing(true);
     }
@@ -94,6 +101,10 @@ export default function ConnectionDetail() {
 
   const handleSave = () => {
     if (!id || !formData) return;
+    
+    const nextFollowUp = formData.follow_up_enabled && formData.follow_up_frequency !== 'none'
+      ? calculateNextFollowUp(formData.follow_up_frequency as FollowUpFrequency)
+      : null;
     
     updateConnection.mutate(
       {
@@ -108,6 +119,9 @@ export default function ConnectionDetail() {
         follow_up_actions: formData.follow_up_actions,
         additional_notes: formData.additional_notes || null,
         is_favorite: formData.is_favorite,
+        follow_up_frequency: formData.follow_up_frequency,
+        follow_up_enabled: formData.follow_up_enabled,
+        next_follow_up_at: nextFollowUp?.toISOString() || null,
       },
       {
         onSuccess: () => {
@@ -116,6 +130,11 @@ export default function ConnectionDetail() {
         },
       }
     );
+  };
+
+  const handleLogInteraction = () => {
+    if (!id) return;
+    logInteraction.mutate(id);
   };
 
   const handleDelete = () => {
@@ -309,6 +328,83 @@ export default function ConnectionDetail() {
             </>
           )}
         </div>
+
+        {/* Follow-up Reminders */}
+        {!isEditing && connection.follow_up_frequency !== 'none' && connection.follow_up_enabled && (
+          <div className="p-4 bg-card rounded-xl border space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-accent" />
+                <span className="font-medium">Follow-up</span>
+              </div>
+              <Badge variant="secondary" className="capitalize">
+                {FREQUENCY_LABELS[connection.follow_up_frequency as FollowUpFrequency] || 'Monthly'}
+              </Badge>
+            </div>
+            
+            <div className="text-sm text-muted-foreground space-y-1">
+              {connection.last_interaction_at && (
+                <p>Last interaction: {formatDistanceToNow(new Date(connection.last_interaction_at), { addSuffix: true })}</p>
+              )}
+              {connection.next_follow_up_at && (
+                <p>
+                  Next reminder: {new Date(connection.next_follow_up_at) > new Date() 
+                    ? formatDistanceToNow(new Date(connection.next_follow_up_at), { addSuffix: true })
+                    : 'Due now'}
+                </p>
+              )}
+            </div>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogInteraction}
+              disabled={logInteraction.isPending}
+              className="w-full gap-2"
+            >
+              {logInteraction.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MessageCircle className="w-4 h-4" />
+              )}
+              Log Interaction
+            </Button>
+          </div>
+        )}
+
+        {/* Follow-up Settings (Edit Mode) */}
+        {isEditing && (
+          <div className="space-y-3">
+            <Label className="text-muted-foreground">Follow-up Reminders</Label>
+            <div className="flex items-center gap-4">
+              <Checkbox
+                id="follow_up_enabled"
+                checked={formData?.follow_up_enabled}
+                onCheckedChange={(checked) => setFormData((p: any) => ({ ...p, follow_up_enabled: !!checked }))}
+              />
+              <label htmlFor="follow_up_enabled" className="text-sm">
+                Enable follow-up reminders
+              </label>
+            </div>
+            {formData?.follow_up_enabled && (
+              <Select
+                value={formData?.follow_up_frequency || 'monthly'}
+                onValueChange={(v) => setFormData((p: any) => ({ ...p, follow_up_frequency: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {FREQUENCY_OPTIONS.filter(f => f.value !== 'none').map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
 
         {/* Tags */}
         <div className="space-y-2">

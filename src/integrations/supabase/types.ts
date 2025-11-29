@@ -19,12 +19,16 @@ export type Database = {
           additional_notes: string | null
           created_at: string
           follow_up_actions: string[] | null
+          follow_up_enabled: boolean | null
+          follow_up_frequency: string | null
           how_we_met: string | null
           id: string
           important_facts: string[] | null
           is_favorite: boolean | null
           key_interests: string[] | null
+          last_interaction_at: string | null
           name: string | null
+          next_follow_up_at: string | null
           original_transcription: string | null
           profession_or_role: string | null
           relationship_type: string | null
@@ -35,12 +39,16 @@ export type Database = {
           additional_notes?: string | null
           created_at?: string
           follow_up_actions?: string[] | null
+          follow_up_enabled?: boolean | null
+          follow_up_frequency?: string | null
           how_we_met?: string | null
           id?: string
           important_facts?: string[] | null
           is_favorite?: boolean | null
           key_interests?: string[] | null
+          last_interaction_at?: string | null
           name?: string | null
+          next_follow_up_at?: string | null
           original_transcription?: string | null
           profession_or_role?: string | null
           relationship_type?: string | null
@@ -51,12 +59,16 @@ export type Database = {
           additional_notes?: string | null
           created_at?: string
           follow_up_actions?: string[] | null
+          follow_up_enabled?: boolean | null
+          follow_up_frequency?: string | null
           how_we_met?: string | null
           id?: string
           important_facts?: string[] | null
           is_favorite?: boolean | null
           key_interests?: string[] | null
+          last_interaction_at?: string | null
           name?: string | null
+          next_follow_up_at?: string | null
           original_transcription?: string | null
           profession_or_role?: string | null
           relationship_type?: string | null
@@ -64,6 +76,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          connection_id: string | null
+          created_at: string
+          id: string
+          is_dismissed: boolean | null
+          is_read: boolean | null
+          message: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          action_url?: string | null
+          connection_id?: string | null
+          created_at?: string
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          message?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          action_url?: string | null
+          connection_id?: string | null
+          created_at?: string
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          message?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suggestions: {
         Row: {

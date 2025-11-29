@@ -6,25 +6,44 @@ import { EmptyState } from '@/components/EmptyState';
 import { ConnectionCard } from '@/components/ConnectionCard';
 import { RecordingModal } from '@/components/RecordingModal';
 import { TagFilter } from '@/components/TagFilter';
+import { CategoryFilter } from '@/components/CategoryFilter';
 import { useConnections } from '@/hooks/useConnections';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+type CategoryType = 'all' | 'professional' | 'personal';
+
 const Index = () => {
   const navigate = useNavigate();
   const [recordingOpen, setRecordingOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryType>('all');
   const { data: connections, isLoading } = useConnections();
 
   const filteredConnections = useMemo(() => {
     if (!connections) return [];
-    if (selectedTags.length === 0) return connections;
     
-    return connections.filter(connection => 
-      selectedTags.every(tag => connection.tags?.includes(tag))
-    );
-  }, [connections, selectedTags]);
+    let result = connections;
+    
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      result = result.filter(connection => 
+        connection.relationship_type === categoryFilter
+      );
+    }
+    
+    // Apply tag filter
+    if (selectedTags.length > 0) {
+      result = result.filter(connection => 
+        selectedTags.every(tag => connection.tags?.includes(tag))
+      );
+    }
+    
+    return result;
+  }, [connections, selectedTags, categoryFilter]);
+
+  const hasActiveFilters = selectedTags.length > 0 || categoryFilter !== 'all';
 
   const handleOpenRecording = () => setRecordingOpen(true);
   const handleSuccess = () => {
@@ -45,13 +64,18 @@ const Index = () => {
           </div>
         ) : connections && connections.length > 0 ? (
           <>
+            <CategoryFilter 
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+            />
+            
             <TagFilter 
               connections={connections}
               selectedTags={selectedTags}
               onTagsChange={setSelectedTags}
             />
             
-            {selectedTags.length > 0 && (
+            {hasActiveFilters && (
               <p className="text-sm text-muted-foreground mb-4">
                 Showing {filteredConnections.length} of {connections.length} connections
               </p>

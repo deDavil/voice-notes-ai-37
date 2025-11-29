@@ -53,6 +53,8 @@ export interface ProcessedVoiceNote {
     additional_context: string | null;
     todos?: ExtractedTodoFromVoice[];
     suggestions?: ExtractedSuggestionFromVoice[];
+    suggested_follow_up_frequency?: string;
+    frequency_reasoning?: string;
   } | null;
 }
 

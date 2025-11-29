@@ -102,7 +102,9 @@ Return a JSON object with these fields:
       "type": "book|podcast|article|tool|course|other",
       "context": "why they recommended it"
     }
-  ]
+  ],
+  "suggested_follow_up_frequency": "weekly|biweekly|monthly|quarterly",
+  "frequency_reasoning": "brief explanation for the suggested frequency"
 }
 
 EXTRACTION RULES FOR TODOS:
@@ -115,6 +117,14 @@ EXTRACTION RULES FOR SUGGESTIONS:
 - Books, podcasts, articles, tools, courses, people to meet
 - Include the name/title if mentioned
 - Infer type from context (e.g., "read X" = book, "listen to X" = podcast)
+
+FOLLOW-UP FREQUENCY RULES:
+Based on the relationship context, suggest a follow-up frequency:
+- "weekly" for: clients, warm leads, active deals, urgent collaborations
+- "biweekly" for: investors, founders, active collaborators, mentors
+- "monthly" for: general professional contacts, personal friends, mentees
+- "quarterly" for: casual networking contacts, one-time meetings, distant connections
+Return your suggestion in "suggested_follow_up_frequency" with brief reasoning in "frequency_reasoning".
 
 Only return the JSON object, no other text.`;
 
