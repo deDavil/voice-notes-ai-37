@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      connections: {
+        Row: {
+          additional_notes: string | null
+          created_at: string
+          follow_up_actions: string[] | null
+          how_we_met: string | null
+          id: string
+          important_facts: string[] | null
+          is_favorite: boolean | null
+          key_interests: string[] | null
+          name: string | null
+          original_transcription: string | null
+          profession_or_role: string | null
+          relationship_type: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          created_at?: string
+          follow_up_actions?: string[] | null
+          how_we_met?: string | null
+          id?: string
+          important_facts?: string[] | null
+          is_favorite?: boolean | null
+          key_interests?: string[] | null
+          name?: string | null
+          original_transcription?: string | null
+          profession_or_role?: string | null
+          relationship_type?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          additional_notes?: string | null
+          created_at?: string
+          follow_up_actions?: string[] | null
+          how_we_met?: string | null
+          id?: string
+          important_facts?: string[] | null
+          is_favorite?: boolean | null
+          key_interests?: string[] | null
+          name?: string | null
+          original_transcription?: string | null
+          profession_or_role?: string | null
+          relationship_type?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
