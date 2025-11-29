@@ -1,1 +1,4 @@
 project_id = "umztyifcjskcmzamzhgs"
+
+[functions.process-voice-note]
+verify_jwt = false
