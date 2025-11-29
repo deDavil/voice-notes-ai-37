@@ -2,3 +2,6 @@ project_id = "umztyifcjskcmzamzhgs"
 
 [functions.process-voice-note]
 verify_jwt = false
+
+[functions.generate-followup-messages]
+verify_jwt = false

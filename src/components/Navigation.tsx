@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Users, CheckSquare, Lightbulb } from 'lucide-react';
+import { Users, CheckSquare, Lightbulb, CalendarCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/', label: 'Connections', icon: Users },
   { to: '/todos', label: 'TO-DOs', icon: CheckSquare },
   { to: '/suggestions', label: 'Suggestions', icon: Lightbulb },
+  { to: '/follow-ups', label: 'Follow-ups', icon: CalendarCheck },
 ];
 
 export function Navigation() {

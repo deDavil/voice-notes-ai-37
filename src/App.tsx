@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import ConnectionDetail from "./pages/ConnectionDetail";
 import Todos from "./pages/Todos";
 import Suggestions from "./pages/Suggestions";
+import FollowUps from "./pages/FollowUps";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/connection/:id" element={<ConnectionDetail />} />
           <Route path="/todos" element={<Todos />} />
           <Route path="/suggestions" element={<Suggestions />} />
+          <Route path="/follow-ups" element={<FollowUps />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
