@@ -1,6 +1,31 @@
 import { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
 
+async function processAudioData(base64Audio: string): Promise<ProcessedVoiceNote> {
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-voice-note`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ audio: base64Audio }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Processing failed');
+  }
+
+  return {
+    transcription: data.transcription,
+    extracted: data.extracted,
+  };
+}
+
 export type RecordingState = 'idle' | 'recording' | 'processing' | 'complete' | 'error';
 
 export interface ProcessedVoiceNote {
@@ -162,6 +187,46 @@ export function useVoiceRecorder() {
     setError(null);
   }, []);
 
+  const processFile = useCallback(async (file: File) => {
+    setError(null);
+    setResult(null);
+    setState('processing');
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        try {
+          const processed = await processAudioData(base64Audio);
+          setResult(processed);
+          setState('complete');
+          toast.success('Audio file processed successfully');
+        } catch (err: any) {
+          console.error('Error processing audio file:', err);
+          setError(err.message || 'Failed to process audio file');
+          setState('error');
+          toast.error(err.message || 'Failed to process audio file');
+        }
+      };
+
+      reader.onerror = () => {
+        setError('Failed to read audio file');
+        setState('error');
+        toast.error('Failed to read audio file');
+      };
+
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error('Error processing file:', err);
+      setError(err.message || 'Failed to process file');
+      setState('error');
+      toast.error(err.message || 'Failed to process file');
+    }
+  }, []);
+
   return {
     state,
     duration,
@@ -170,5 +235,6 @@ export function useVoiceRecorder() {
     startRecording,
     stopRecording,
     reset,
+    processFile,
   };
 }

@@ -1,4 +1,5 @@
-import { Mic, Square, Loader2 } from 'lucide-react';
+import { useRef } from 'react';
+import { Mic, Square, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RecordingState } from '@/hooks/useVoiceRecorder';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ interface RecordingInterfaceProps {
   onStart: () => void;
   onStop: () => void;
   onCancel: () => void;
+  onFileUpload?: (file: File) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -22,8 +24,22 @@ export function RecordingInterface({
   duration, 
   onStart, 
   onStop, 
-  onCancel 
+  onCancel,
+  onFileUpload 
 }: RecordingInterfaceProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileUpload) {
+      onFileUpload(file);
+    }
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   if (state === 'processing') {
     return (
       <div className="flex flex-col items-center justify-center py-12 animate-fade-in">
@@ -115,9 +131,34 @@ export function RecordingInterface({
         </Button>
       </div>
 
-      <p className="text-sm font-medium text-foreground">
+      <p className="text-sm font-medium text-foreground mb-6">
         Tap to start recording
       </p>
+
+      {/* File upload option for development */}
+      {onFileUpload && (
+        <div className="border-t border-border/50 pt-6 mt-2 w-full">
+          <p className="text-xs text-muted-foreground text-center mb-3">
+            Or upload an audio file (dev mode)
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Audio File
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

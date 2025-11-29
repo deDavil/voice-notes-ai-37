@@ -27,7 +27,8 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
     error, 
     startRecording, 
     stopRecording, 
-    reset 
+    reset,
+    processFile 
   } = useVoiceRecorder();
 
   const { data: connections = [] } = useConnections();
@@ -118,6 +119,7 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
             onStart={startRecording}
             onStop={stopRecording}
             onCancel={handleClose}
+            onFileUpload={processFile}
           />
         )}
 
