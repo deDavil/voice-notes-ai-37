@@ -85,7 +85,7 @@ export default function ConnectionDetail() {
   const [newTag, setNewTag] = useState('');
   const [newInterest, setNewInterest] = useState('');
   const [newFact, setNewFact] = useState('');
-  const [newAction, setNewAction] = useState('');
+  
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const startEditing = () => {
@@ -98,7 +98,7 @@ export default function ConnectionDetail() {
         important_facts: [...(connection.important_facts || [])],
         relationship_type: connection.relationship_type,
         tags: [...(connection.tags || [])],
-        follow_up_actions: [...(connection.follow_up_actions || [])],
+        
         additional_notes: connection.additional_notes || '',
         is_favorite: connection.is_favorite,
         follow_up_frequency: connection.follow_up_frequency || 'monthly',
@@ -147,7 +147,7 @@ export default function ConnectionDetail() {
         important_facts: formData.important_facts,
         relationship_type: formData.relationship_type,
         tags: formData.tags,
-        follow_up_actions: formData.follow_up_actions,
+        
         additional_notes: formData.additional_notes || null,
         is_favorite: formData.is_favorite,
         follow_up_frequency: formData.follow_up_frequency,
@@ -797,38 +797,6 @@ export default function ConnectionDetail() {
           </div>
         )}
 
-        {/* Follow-up Actions */}
-        {(displayData.follow_up_actions?.length > 0 || isEditing) && (
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Follow-up Actions</Label>
-            <div className="space-y-2">
-              {displayData.follow_up_actions?.map((action: string, i: number) => (
-                <div key={i} className="flex items-start gap-2 p-3 bg-accent/10 rounded-lg border border-accent/20">
-                  <span className="text-sm flex-1">{action}</span>
-                  {isEditing && (
-                    <button onClick={() => handleRemoveItem('follow_up_actions', i)} className="text-muted-foreground hover:text-destructive">
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {isEditing && (
-              <div className="flex gap-2">
-                <Input
-                  value={newAction}
-                  onChange={(e) => setNewAction(e.target.value)}
-                  placeholder="Add action"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem('follow_up_actions', newAction, setNewAction))}
-                  className="flex-1"
-                />
-                <Button variant="outline" size="icon" onClick={() => handleAddItem('follow_up_actions', newAction, setNewAction)}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* TO-DOs with this connection */}
         {!isEditing && todos && todos.length > 0 && (
