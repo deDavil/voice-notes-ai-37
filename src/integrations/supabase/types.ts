@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_suggestions: {
+        Row: {
+          connection_id: string | null
+          connection_name: string
+          created_at: string
+          description: string
+          dismissed_at: string | null
+          emoji: string
+          expires_at: string
+          id: string
+          is_dismissed: boolean | null
+          shared_interest: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          connection_id?: string | null
+          connection_name: string
+          created_at?: string
+          description: string
+          dismissed_at?: string | null
+          emoji: string
+          expires_at: string
+          id?: string
+          is_dismissed?: boolean | null
+          shared_interest: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          connection_id?: string | null
+          connection_name?: string
+          created_at?: string
+          description?: string
+          dismissed_at?: string | null
+          emoji?: string
+          expires_at?: string
+          id?: string
+          is_dismissed?: boolean | null
+          shared_interest?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_suggestions_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connections: {
         Row: {
           additional_notes: string | null

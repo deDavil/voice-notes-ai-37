@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.generate-followup-messages]
 verify_jwt = true
+
+[functions.generate-activity-suggestions]
+verify_jwt = true
