@@ -1,7 +1,7 @@
 project_id = "umztyifcjskcmzamzhgs"
 
 [functions.process-voice-note]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-followup-messages]
-verify_jwt = false
+verify_jwt = true

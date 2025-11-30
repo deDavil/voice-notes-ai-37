@@ -13,6 +13,15 @@ serve(async (req) => {
   }
 
   try {
+    // Validate Authorization header for authenticated requests
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { connectionId } = await req.json();
 
     if (!connectionId) {
@@ -22,11 +31,16 @@ serve(async (req) => {
       );
     }
 
-    // Fetch connection with todos
+    // Create RLS-aware Supabase client using user's JWT
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader }
+      }
+    });
 
+    // RLS will automatically filter to only user's connections
     const { data: connection, error: fetchError } = await supabase
       .from("connections")
       .select(`*, todos(text, is_completed)`)
@@ -36,7 +50,7 @@ serve(async (req) => {
     if (fetchError || !connection) {
       console.error("Error fetching connection:", fetchError);
       return new Response(
-        JSON.stringify({ error: "Connection not found" }),
+        JSON.stringify({ error: "Connection not found or access denied" }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
