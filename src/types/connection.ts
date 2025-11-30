@@ -4,6 +4,7 @@ export interface Connection {
   id: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
   name: string | null;
   how_we_met: string | null;
   profession_or_role: string | null;

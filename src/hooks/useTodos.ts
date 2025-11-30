@@ -2,10 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Todo, TodoWithConnection } from '@/types/todo';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export function useTodos() {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['todos'],
+    queryKey: ['todos', user?.id],
     queryFn: async () => {
       const { data: todos, error: todosError } = await supabase
         .from('todos')
@@ -17,6 +20,8 @@ export function useTodos() {
 
       // Fetch connection names
       const connectionIds = [...new Set((todos as Todo[]).map(t => t.connection_id))];
+      if (connectionIds.length === 0) return [] as TodoWithConnection[];
+      
       const { data: connections } = await supabase
         .from('connections')
         .select('id, name')
@@ -29,10 +34,13 @@ export function useTodos() {
         connection_name: connectionMap.get(todo.connection_id) || null,
       })) as TodoWithConnection[];
     },
+    enabled: !!user,
   });
 }
 
 export function useTodosByConnection(connectionId: string | undefined) {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['todos', 'connection', connectionId],
     queryFn: async () => {
@@ -47,18 +55,21 @@ export function useTodosByConnection(connectionId: string | undefined) {
       if (error) throw error;
       return data as Todo[];
     },
-    enabled: !!connectionId,
+    enabled: !!connectionId && !!user,
   });
 }
 
 export function useCreateTodo() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (todo: { text: string; connection_id: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      
       const { data, error } = await supabase
         .from('todos')
-        .insert(todo)
+        .insert({ ...todo, user_id: user.id })
         .select()
         .single();
 
@@ -78,13 +89,17 @@ export function useCreateTodo() {
 
 export function useCreateTodos() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (todos: { text: string; connection_id: string }[]) => {
+      if (!user) throw new Error('Not authenticated');
       if (todos.length === 0) return [];
+      
+      const todosWithUser = todos.map(t => ({ ...t, user_id: user.id }));
       const { data, error } = await supabase
         .from('todos')
-        .insert(todos)
+        .insert(todosWithUser)
         .select();
 
       if (error) throw error;

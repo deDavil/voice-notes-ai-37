@@ -2,10 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Suggestion, SuggestionWithConnection, SuggestionType } from '@/types/suggestion';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export function useSuggestions() {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['suggestions'],
+    queryKey: ['suggestions', user?.id],
     queryFn: async () => {
       const { data: suggestions, error: suggestionsError } = await supabase
         .from('suggestions')
@@ -17,6 +20,8 @@ export function useSuggestions() {
 
       // Fetch connection names
       const connectionIds = [...new Set((suggestions as Suggestion[]).map(s => s.connection_id))];
+      if (connectionIds.length === 0) return [] as SuggestionWithConnection[];
+      
       const { data: connections } = await supabase
         .from('connections')
         .select('id, name')
@@ -29,10 +34,13 @@ export function useSuggestions() {
         connection_name: connectionMap.get(suggestion.connection_id) || null,
       })) as SuggestionWithConnection[];
     },
+    enabled: !!user,
   });
 }
 
 export function useSuggestionsByConnection(connectionId: string | undefined) {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['suggestions', 'connection', connectionId],
     queryFn: async () => {
@@ -47,18 +55,21 @@ export function useSuggestionsByConnection(connectionId: string | undefined) {
       if (error) throw error;
       return data as Suggestion[];
     },
-    enabled: !!connectionId,
+    enabled: !!connectionId && !!user,
   });
 }
 
 export function useCreateSuggestion() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (suggestion: { text: string; connection_id: string; type: SuggestionType; url?: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      
       const { data, error } = await supabase
         .from('suggestions')
-        .insert(suggestion)
+        .insert({ ...suggestion, user_id: user.id })
         .select()
         .single();
 
@@ -78,13 +89,17 @@ export function useCreateSuggestion() {
 
 export function useCreateSuggestions() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (suggestions: { text: string; connection_id: string; type: SuggestionType; url?: string }[]) => {
+      if (!user) throw new Error('Not authenticated');
       if (suggestions.length === 0) return [];
+      
+      const suggestionsWithUser = suggestions.map(s => ({ ...s, user_id: user.id }));
       const { data, error } = await supabase
         .from('suggestions')
-        .insert(suggestions)
+        .insert(suggestionsWithUser)
         .select();
 
       if (error) throw error;

@@ -2,10 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Notification, calculateNextFollowUp, FollowUpFrequency } from '@/types/notification';
 import { differenceInDays } from 'date-fns';
+import { useAuth } from './useAuth';
 
 export function useNotifications() {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
@@ -17,12 +20,15 @@ export function useNotifications() {
       if (error) throw error;
       return data as Notification[];
     },
+    enabled: !!user,
   });
 }
 
 export function useUnreadNotificationCount() {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['notifications', 'unread-count'],
+    queryKey: ['notifications', 'unread-count', user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
         .from('notifications')
@@ -33,6 +39,7 @@ export function useUnreadNotificationCount() {
       if (error) throw error;
       return count ?? 0;
     },
+    enabled: !!user,
   });
 }
 
@@ -141,9 +148,12 @@ export function useLogInteraction() {
 
 export function useCheckFollowUpNotifications() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async () => {
+      if (!user) return;
+      
       const now = new Date();
 
       // Get connections due for follow-up
@@ -179,6 +189,7 @@ export function useCheckFollowUpNotifications() {
 
           await supabase.from('notifications').insert({
             connection_id: connection.id,
+            user_id: user.id,
             type: 'follow_up',
             title: `Time to reconnect with ${connection.name || 'this contact'}`,
             message,

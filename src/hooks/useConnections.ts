@@ -2,10 +2,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Connection } from '@/types/connection';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export function useConnections() {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['connections'],
+    queryKey: ['connections', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('connections')
@@ -15,10 +18,13 @@ export function useConnections() {
       if (error) throw error;
       return data as Connection[];
     },
+    enabled: !!user,
   });
 }
 
 export function useConnection(id: string | undefined) {
+  const { user } = useAuth();
+  
   return useQuery({
     queryKey: ['connection', id],
     queryFn: async () => {
@@ -32,18 +38,21 @@ export function useConnection(id: string | undefined) {
       if (error) throw error;
       return data as Connection | null;
     },
-    enabled: !!id,
+    enabled: !!id && !!user,
   });
 }
 
 export function useCreateConnection() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (connection: Omit<Connection, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (connection: Omit<Connection, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+      if (!user) throw new Error('Not authenticated');
+      
       const { data, error } = await supabase
         .from('connections')
-        .insert(connection)
+        .insert({ ...connection, user_id: user.id })
         .select()
         .single();
 

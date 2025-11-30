@@ -1,6 +1,7 @@
 export interface Notification {
   id: string;
   created_at: string;
+  user_id: string;
   connection_id: string | null;
   type: 'follow_up' | 'event' | 'reminder';
   title: string;
