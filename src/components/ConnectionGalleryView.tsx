@@ -1,16 +1,18 @@
 import { Connection } from '@/types/connection';
+import { Profile } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star } from 'lucide-react';
+import { Star, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WarmthBadge } from './WarmthBadge';
 import { PriorityBadge } from './PriorityBadge';
-import { formatDistanceToNow } from 'date-fns';
+import { findCommonGround } from '@/lib/commonGround';
 
 interface ConnectionGalleryViewProps {
   connections: Connection[];
   onConnectionClick: (id: string) => void;
+  userProfile?: Profile | null;
 }
 
 const relationshipColors: Record<string, string> = {
@@ -42,11 +44,12 @@ function getFollowUpStatus(nextFollowUp: string | null) {
   return { color: 'text-muted-foreground', label: `${daysUntil}d`, dot: 'bg-primary' };
 }
 
-export function ConnectionGalleryView({ connections, onConnectionClick }: ConnectionGalleryViewProps) {
+export function ConnectionGalleryView({ connections, onConnectionClick, userProfile }: ConnectionGalleryViewProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {connections.map((connection) => {
         const followUpStatus = connection.follow_up_enabled ? getFollowUpStatus(connection.next_follow_up_at) : null;
+        const common = findCommonGround(userProfile || null, connection);
         
         return (
           <Card
@@ -80,9 +83,17 @@ export function ConnectionGalleryView({ connections, onConnectionClick }: Connec
                 <PriorityBadge level={connection.priority} size="sm" />
               </div>
               
-              <p className="text-sm text-muted-foreground truncate max-w-full mb-3">
+              <p className="text-sm text-muted-foreground truncate max-w-full mb-2">
                 {connection.profession_or_role || connection.company || 'No role'}
               </p>
+              
+              {/* Common Ground Badge */}
+              {common.total > 0 && (
+                <div className="flex items-center gap-1 text-xs text-primary mb-2">
+                  <Sparkles className="w-3 h-3" />
+                  <span>{common.total} in common</span>
+                </div>
+              )}
               
               <div className="flex flex-wrap justify-center gap-1 mb-3">
                 <Badge

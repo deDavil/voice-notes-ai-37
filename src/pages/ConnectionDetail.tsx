@@ -4,6 +4,7 @@ import { useConnection, useUpdateConnection, useDeleteConnection } from '@/hooks
 import { useTodosByConnection, useUpdateTodo } from '@/hooks/useTodos';
 import { useSuggestionsByConnection, useUpdateSuggestion } from '@/hooks/useSuggestions';
 import { useLogInteraction } from '@/hooks/useNotifications';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -61,6 +62,7 @@ import { PhotoUpload } from '@/components/PhotoUpload';
 import { SocialLinks } from '@/components/SocialLinks';
 import { WarmthBadge } from '@/components/WarmthBadge';
 import { PriorityBadge } from '@/components/PriorityBadge';
+import { CommonGroundSection } from '@/components/CommonGroundSection';
 
 const relationshipColors: Record<string, string> = {
   professional: 'bg-tag-professional/15 text-tag-professional border-tag-professional/30',
@@ -72,6 +74,7 @@ const relationshipColors: Record<string, string> = {
 export default function ConnectionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { data: connection, isLoading } = useConnection(id);
   const { data: todos } = useTodosByConnection(id);
   const { data: suggestions } = useSuggestionsByConnection(id);
@@ -431,6 +434,11 @@ export default function ConnectionDetail() {
             instagram={connection.instagram_url}
             website={connection.website_url}
           />
+        )}
+
+        {/* Common Ground Section */}
+        {!isEditing && (
+          <CommonGroundSection userProfile={profile} connection={connection} />
         )}
 
         {/* Contact & Social Edit Section */}

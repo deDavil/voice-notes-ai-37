@@ -175,36 +175,69 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          company: string | null
+          company_website: string | null
           created_at: string
           default_follow_up_frequency: string | null
           default_view: string | null
           email_notifications: boolean | null
           full_name: string | null
           id: string
+          industries: string[] | null
+          interests: string[] | null
+          linkedin_url: string | null
+          location: string | null
+          profession_or_role: string | null
           show_follow_up_reminders: boolean | null
+          topics: string[] | null
+          twitter_url: string | null
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
+          company_website?: string | null
           created_at?: string
           default_follow_up_frequency?: string | null
           default_view?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id: string
+          industries?: string[] | null
+          interests?: string[] | null
+          linkedin_url?: string | null
+          location?: string | null
+          profession_or_role?: string | null
           show_follow_up_reminders?: boolean | null
+          topics?: string[] | null
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          company?: string | null
+          company_website?: string | null
           created_at?: string
           default_follow_up_frequency?: string | null
           default_view?: string | null
           email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          industries?: string[] | null
+          interests?: string[] | null
+          linkedin_url?: string | null
+          location?: string | null
+          profession_or_role?: string | null
           show_follow_up_reminders?: boolean | null
+          topics?: string[] | null
+          twitter_url?: string | null
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
