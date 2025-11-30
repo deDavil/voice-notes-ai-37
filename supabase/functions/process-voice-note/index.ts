@@ -18,40 +18,45 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    const DEEPGRAM_API_KEY = Deno.env.get('DEEPGRAM_API_KEY');
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
-    if (!DEEPGRAM_API_KEY) {
-      throw new Error('DEEPGRAM_API_KEY is not configured');
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error('ELEVENLABS_API_KEY is not configured');
     }
 
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    console.log('Processing voice note - starting transcription...');
+    console.log('Processing voice note - starting transcription with ElevenLabs...');
 
     // Decode base64 audio
     const binaryAudio = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
     
-    // Step 1: Transcribe with Deepgram
-    const transcriptionResponse = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true', {
+    // Create FormData for ElevenLabs API
+    const formData = new FormData();
+    const audioBlob = new Blob([binaryAudio], { type: 'audio/webm' });
+    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('model_id', 'scribe_v1');
+
+    // Step 1: Transcribe with ElevenLabs
+    const transcriptionResponse = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${DEEPGRAM_API_KEY}`,
-        'Content-Type': 'audio/webm',
+        'xi-api-key': ELEVENLABS_API_KEY,
       },
-      body: binaryAudio,
+      body: formData,
     });
 
     if (!transcriptionResponse.ok) {
       const errorText = await transcriptionResponse.text();
-      console.error('Deepgram error:', errorText);
+      console.error('ElevenLabs error:', errorText);
       throw new Error(`Transcription failed: ${errorText}`);
     }
 
     const transcriptionData = await transcriptionResponse.json();
-    const transcription = transcriptionData.results?.channels?.[0]?.alternatives?.[0]?.transcript || '';
+    const transcription = transcriptionData.text || '';
 
     console.log('Transcription complete:', transcription.substring(0, 100) + '...');
 
