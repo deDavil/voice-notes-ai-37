@@ -1,0 +1,12 @@
+-- Add extended profile fields to profiles table
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profession_or_role TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS company TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS company_website TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS twitter_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS industries TEXT[] DEFAULT '{}';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS topics TEXT[] DEFAULT '{}';

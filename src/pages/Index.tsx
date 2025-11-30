@@ -12,6 +12,7 @@ import { ConnectionListView } from '@/components/ConnectionListView';
 import { ConnectionGalleryView } from '@/components/ConnectionGalleryView';
 import { ConnectionTableView } from '@/components/ConnectionTableView';
 import { useConnections } from '@/hooks/useConnections';
+import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ type CategoryType = 'all' | 'professional' | 'personal';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [recordingOpen, setRecordingOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<CategoryType>('all');
@@ -127,12 +129,14 @@ const Index = () => {
                   <ConnectionListView
                     connections={filteredConnections}
                     onConnectionClick={handleConnectionClick}
+                    userProfile={profile}
                   />
                 )}
                 {viewMode === 'gallery' && (
                   <ConnectionGalleryView
                     connections={filteredConnections}
                     onConnectionClick={handleConnectionClick}
+                    userProfile={profile}
                   />
                 )}
                 {viewMode === 'table' && (

@@ -12,6 +12,18 @@ export interface Profile {
   email_notifications: boolean;
   created_at: string;
   updated_at: string;
+  // Extended profile fields
+  profession_or_role: string | null;
+  company: string | null;
+  company_website: string | null;
+  location: string | null;
+  bio: string | null;
+  linkedin_url: string | null;
+  twitter_url: string | null;
+  website_url: string | null;
+  interests: string[];
+  industries: string[];
+  topics: string[];
 }
 
 export function useAuth() {
@@ -28,7 +40,13 @@ export function useAuth() {
       .single();
     
     if (!error && data) {
-      setProfile(data as Profile);
+      // Ensure arrays have default values
+      setProfile({
+        ...data,
+        interests: data.interests || [],
+        industries: data.industries || [],
+        topics: data.topics || [],
+      } as Profile);
     }
   }, []);
 

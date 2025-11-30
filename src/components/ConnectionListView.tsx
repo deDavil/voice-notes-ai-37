@@ -1,15 +1,18 @@
 import { Connection } from '@/types/connection';
+import { Profile } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, Calendar, ChevronRight } from 'lucide-react';
+import { Star, Calendar, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { WarmthBadge } from './WarmthBadge';
 import { PriorityBadge } from './PriorityBadge';
+import { findCommonGround } from '@/lib/commonGround';
 
 interface ConnectionListViewProps {
   connections: Connection[];
   onConnectionClick: (id: string) => void;
+  userProfile?: Profile | null;
 }
 
 const relationshipColors: Record<string, string> = {
@@ -29,76 +32,93 @@ function getInitials(name: string | null): string {
     .slice(0, 2);
 }
 
-export function ConnectionListView({ connections, onConnectionClick }: ConnectionListViewProps) {
+export function ConnectionListView({ connections, onConnectionClick, userProfile }: ConnectionListViewProps) {
   return (
     <div className="space-y-2">
-      {connections.map((connection) => (
-        <div
-          key={connection.id}
-          onClick={() => onConnectionClick(connection.id)}
-          className={cn(
-            "flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card",
-            "cursor-pointer transition-all duration-200",
-            "hover:shadow-md hover:border-border active:scale-[0.99]"
-          )}
-        >
-          <Avatar className="w-12 h-12 flex-shrink-0">
-            <AvatarImage src={connection.photo_url || undefined} />
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {getInitials(connection.name)}
-            </AvatarFallback>
-          </Avatar>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-foreground truncate">
-                {connection.name || 'Unknown'}
-              </h3>
-              {connection.is_favorite && (
-                <Star className="w-4 h-4 fill-accent text-accent flex-shrink-0" />
-              )}
-              <PriorityBadge level={connection.priority} />
-            </div>
+      {connections.map((connection) => {
+        const common = findCommonGround(userProfile || null, connection);
+        
+        return (
+          <div
+            key={connection.id}
+            onClick={() => onConnectionClick(connection.id)}
+            className={cn(
+              "flex items-center gap-4 p-4 rounded-xl border border-border/50 bg-card",
+              "cursor-pointer transition-all duration-200",
+              "hover:shadow-md hover:border-border active:scale-[0.99]"
+            )}
+          >
+            <Avatar className="w-12 h-12 flex-shrink-0">
+              <AvatarImage src={connection.photo_url || undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {getInitials(connection.name)}
+              </AvatarFallback>
+            </Avatar>
             
-            <p className="text-sm text-muted-foreground truncate">
-              {connection.profession_or_role}
-              {connection.company && ` at ${connection.company}`}
-              {connection.location && ` · ${connection.location}`}
-            </p>
-            
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-xs capitalize border",
-                  relationshipColors[connection.relationship_type] || relationshipColors.other
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-foreground truncate">
+                  {connection.name || 'Unknown'}
+                </h3>
+                {connection.is_favorite && (
+                  <Star className="w-4 h-4 fill-accent text-accent flex-shrink-0" />
                 )}
-              >
-                {connection.relationship_type}
-              </Badge>
-              {connection.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
+                <PriorityBadge level={connection.priority} />
+              </div>
+              
+              <p className="text-sm text-muted-foreground truncate">
+                {connection.profession_or_role}
+                {connection.company && ` at ${connection.company}`}
+                {connection.location && ` · ${connection.location}`}
+              </p>
+              
+              <div className="flex flex-wrap items-center gap-2 mt-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs capitalize border",
+                    relationshipColors[connection.relationship_type] || relationshipColors.other
+                  )}
+                >
+                  {connection.relationship_type}
                 </Badge>
-              ))}
-              {connection.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">
-                  +{connection.tags.length - 2}
-                </span>
+                {connection.tags.slice(0, 2).map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+                {connection.tags.length > 2 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{connection.tags.length - 2}
+                  </span>
+                )}
+              </div>
+              
+              {/* Common Ground Badge */}
+              {common.total > 0 && (
+                <div className="flex items-center gap-1.5 mt-2 text-xs text-primary">
+                  <Sparkles className="w-3 h-3" />
+                  <span>
+                    {common.total === 1 
+                      ? `You both like ${[...common.interests, ...common.industries, ...common.topics][0]}`
+                      : `${common.total} things in common`
+                    }
+                  </span>
+                </div>
               )}
             </div>
-          </div>
-          
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar className="w-3 h-3 mr-1" />
-              {format(new Date(connection.updated_at), 'MMM d')}
+            
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Calendar className="w-3 h-3 mr-1" />
+                {format(new Date(connection.updated_at), 'MMM d')}
+              </div>
+              <WarmthBadge level={connection.warmth_level} size="sm" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
             </div>
-            <WarmthBadge level={connection.warmth_level} size="sm" />
-            <ChevronRight className="w-5 h-5 text-muted-foreground/50" />
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
