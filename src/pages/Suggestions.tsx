@@ -4,6 +4,7 @@ import { useSuggestions, useCreateSuggestion, useUpdateSuggestion, useDeleteSugg
 import { useConnections } from '@/hooks/useConnections';
 import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
+import { ActivityIdeasSection } from '@/components/ActivityIdeasSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,7 +29,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Plus, ChevronDown, Trash2, Pencil, Lightbulb, ExternalLink } from 'lucide-react';
+import { Plus, ChevronDown, Trash2, Pencil, Lightbulb, ExternalLink, BookOpen } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SuggestionWithConnection, SuggestionType, suggestionTypeIcons, suggestionTypeLabels } from '@/types/suggestion';
@@ -173,8 +174,18 @@ export default function Suggestions() {
       <Navigation />
 
       <main className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* Activity Ideas Section */}
+        <ActivityIdeasSection />
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* From Conversations Section */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Suggestions</h2>
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">From Your Conversations</h2>
+          </div>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button variant="accent" size="sm" className="gap-2">
