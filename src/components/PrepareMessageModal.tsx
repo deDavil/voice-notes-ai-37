@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FollowUpConnection } from '@/hooks/useFollowUps';
-import { useLogInteraction } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Copy, Check, Briefcase, Target, Coffee, Building2, MapPin, Sparkles, Loader2 } from 'lucide-react';
+import { Clipboard, Check, Briefcase, Target, Coffee, Building2, MapPin, Sparkles, Loader2 } from 'lucide-react';
+import { calculateNextFollowUp, FollowUpFrequency, getFrequencyDays } from '@/types/notification';
+import { cn } from '@/lib/utils';
 
 interface GeneratedMessage {
   type: string;
@@ -25,7 +26,7 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
   const [messages, setMessages] = useState<GeneratedMessage[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const logInteraction = useLogInteraction();
+  const [isMarkingDone, setIsMarkingDone] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
       generateMessages();
     } else {
       setMessages(null);
+      setCopiedIndex(null);
     }
   }, [isOpen, connection?.id]);
 
@@ -58,16 +60,74 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
   const copyToClipboard = async (text: string, index: number) => {
     await navigator.clipboard.writeText(text);
     setCopiedIndex(index);
-    toast.success('Message copied to clipboard');
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const handleMarkDone = async () => {
     if (!connection) return;
-    await logInteraction.mutateAsync(connection.id);
-    queryClient.invalidateQueries({ queryKey: ['follow-ups'] });
-    toast.success('Follow-up marked as done');
-    onClose();
+    
+    setIsMarkingDone(true);
+    try {
+      // Get current connection data for frequency
+      const { data: connData, error: fetchError } = await supabase
+        .from('connections')
+        .select('follow_up_frequency')
+        .eq('id', connection.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const frequency = (connData?.follow_up_frequency as FollowUpFrequency) || 'monthly';
+      const now = new Date();
+      const nextFollowUp = calculateNextFollowUp(frequency, now);
+      const days = getFrequencyDays(frequency);
+
+      // Update connection
+      const { error: updateError } = await supabase
+        .from('connections')
+        .update({
+          last_interaction_at: now.toISOString(),
+          next_follow_up_at: nextFollowUp?.toISOString() || null,
+        })
+        .eq('id', connection.id);
+
+      if (updateError) throw updateError;
+
+      // Dismiss pending follow-up notifications
+      await supabase
+        .from('notifications')
+        .update({ is_dismissed: true })
+        .eq('connection_id', connection.id)
+        .eq('type', 'follow_up')
+        .eq('is_dismissed', false);
+
+      queryClient.invalidateQueries({ queryKey: ['follow-ups'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      
+      // Show success toast with next reminder info
+      toast.success(
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <Check className="w-4 h-4 text-success" />
+          </div>
+          <div>
+            <p className="font-medium">Follow-up completed!</p>
+            <p className="text-sm text-muted-foreground">
+              Next reminder for {connection.name} in {days} days
+            </p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
+      
+      onClose();
+    } catch (err) {
+      console.error('Failed to mark done:', err);
+      toast.error('Failed to mark as done');
+    } finally {
+      setIsMarkingDone(false);
+    }
   };
 
   const handleSnooze = async (days: number) => {
@@ -129,6 +189,12 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
                   <span>Met: {connection.how_we_met}</span>
                 </div>
               )}
+              {connection.tags && connection.tags.length > 0 && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Target className="w-4 h-4" />
+                  <span>{connection.tags.slice(0, 3).join(', ')}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -143,33 +209,13 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
               <p className="text-sm font-medium text-foreground">Suggested Messages</p>
 
               {messages.filter(m => m.text).map((message, index) => (
-                <Card key={index} className="border-border">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-2">
-                      {getMessageIcon(message.type)}
-                      <span>{message.label}</span>
-                    </div>
-                    <p className="text-sm text-foreground mb-3">{message.text}</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-accent hover:text-accent"
-                      onClick={() => copyToClipboard(message.text!, index)}
-                    >
-                      {copiedIndex === index ? (
-                        <>
-                          <Check className="w-3 h-3 mr-1" />
-                          Copied!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3 mr-1" />
-                          Copy
-                        </>
-                      )}
-                    </Button>
-                  </CardContent>
-                </Card>
+                <MessageOption
+                  key={index}
+                  message={message}
+                  icon={getMessageIcon(message.type)}
+                  isCopied={copiedIndex === index}
+                  onCopy={() => copyToClipboard(message.text!, index)}
+                />
               ))}
             </div>
           ) : null}
@@ -180,12 +226,21 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
               variant="accent"
               className="flex-1"
               onClick={handleMarkDone}
+              disabled={isMarkingDone}
             >
-              Mark as Done
+              {isMarkingDone ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Completing...
+                </>
+              ) : (
+                "Mark as Done - I've reached out"
+              )}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleSnooze(3)}
+              disabled={isMarkingDone}
             >
               Snooze 3 days
             </Button>
@@ -193,5 +248,51 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Message option with inline copy icon
+interface MessageOptionProps {
+  message: GeneratedMessage;
+  icon: React.ReactNode;
+  isCopied: boolean;
+  onCopy: () => void;
+}
+
+function MessageOption({ message, icon, isCopied, onCopy }: MessageOptionProps) {
+  return (
+    <Card className="border-border hover:border-border/80 transition-colors">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            {icon}
+            <span>{message.label}</span>
+          </div>
+          
+          {/* Copy Icon */}
+          <button
+            onClick={onCopy}
+            className={cn(
+              "p-1.5 rounded-md transition-colors",
+              isCopied 
+                ? "text-success" 
+                : "text-muted-foreground hover:text-primary hover:bg-muted"
+            )}
+            title={isCopied ? 'Copied!' : 'Copy message'}
+          >
+            {isCopied ? (
+              <span className="flex items-center gap-1 text-xs font-medium">
+                <Check className="w-3.5 h-3.5" />
+                Copied!
+              </span>
+            ) : (
+              <Clipboard className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        
+        <p className="text-sm text-foreground leading-relaxed">{message.text}</p>
+      </CardContent>
+    </Card>
   );
 }

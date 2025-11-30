@@ -6,10 +6,10 @@ import { PrepareMessageModal } from '@/components/PrepareMessageModal';
 import { useFollowUps, FollowUpConnection } from '@/hooks/useFollowUps';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { CalendarCheck, PartyPopper, Loader2 } from 'lucide-react';
+import { CalendarCheck, PartyPopper, Loader2, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateNextFollowUp, FollowUpFrequency } from '@/types/notification';
+import { calculateNextFollowUp, FollowUpFrequency, getFrequencyDays } from '@/types/notification';
 
 export default function FollowUps() {
   const { data: groups, isLoading } = useFollowUps();
@@ -25,13 +25,15 @@ export default function FollowUps() {
   const handleMarkDone = async (connectionId: string) => {
     const { data: connection } = await supabase
       .from('connections')
-      .select('follow_up_frequency')
+      .select('follow_up_frequency, name')
       .eq('id', connectionId)
       .single();
 
     if (connection) {
       const now = new Date();
-      const nextFollowUp = calculateNextFollowUp(connection.follow_up_frequency as FollowUpFrequency, now);
+      const frequency = connection.follow_up_frequency as FollowUpFrequency;
+      const nextFollowUp = calculateNextFollowUp(frequency, now);
+      const days = getFrequencyDays(frequency);
 
       await supabase
         .from('connections')
@@ -47,12 +49,27 @@ export default function FollowUps() {
         .eq('connection_id', connectionId)
         .eq('type', 'follow_up')
         .eq('is_dismissed', false);
+
+      // Show success toast with next reminder info
+      toast.success(
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-success/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <Check className="w-4 h-4 text-success" />
+          </div>
+          <div>
+            <p className="font-medium">Follow-up completed!</p>
+            <p className="text-sm text-muted-foreground">
+              Next reminder for {connection.name || 'this contact'} in {days} days
+            </p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
     }
 
     queryClient.invalidateQueries({ queryKey: ['follow-ups'] });
     queryClient.invalidateQueries({ queryKey: ['connections'] });
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    toast.success('Follow-up marked as done');
   };
 
   const totalCount = groups 
