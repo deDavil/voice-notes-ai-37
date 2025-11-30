@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import { List, LayoutGrid, Table2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type ViewMode = 'list' | 'gallery' | 'table';
 
@@ -16,7 +16,7 @@ const views: { id: ViewMode; icon: typeof List; label: string }[] = [
 
 export function ViewSwitcher({ currentView, onChange }: ViewSwitcherProps) {
   return (
-    <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+    <div className="flex items-center bg-secondary/50 rounded-lg p-0.5">
       {views.map((view) => {
         const Icon = view.icon;
         return (
@@ -24,15 +24,14 @@ export function ViewSwitcher({ currentView, onChange }: ViewSwitcherProps) {
             key={view.id}
             onClick={() => onChange(view.id)}
             className={cn(
-              "px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5",
+              "h-7 w-7 rounded-md flex items-center justify-center transition-all",
               currentView === view.id
-                ? "bg-background text-foreground shadow-sm"
+                ? "bg-card shadow-xs text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title={view.label}
           >
             <Icon className="w-4 h-4" />
-            <span className="hidden sm:inline">{view.label}</span>
           </button>
         );
       })}
