@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
 import { FollowUpCard } from '@/components/FollowUpCard';
 import { PrepareMessageModal } from '@/components/PrepareMessageModal';
+import { RecordingModal } from '@/components/RecordingModal';
 import { useFollowUps, FollowUpConnection } from '@/hooks/useFollowUps';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -15,6 +17,7 @@ export default function FollowUps() {
   const { data: groups, isLoading } = useFollowUps();
   const [selectedConnection, setSelectedConnection] = useState<FollowUpConnection | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const handlePrepareMessage = (connection: FollowUpConnection) => {
@@ -78,20 +81,7 @@ export default function FollowUps() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="container max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                AI Rolodex
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Remember everyone you meet
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header onAddConnection={() => setIsRecordingModalOpen(true)} />
       <Navigation />
 
       <main className="container max-w-2xl mx-auto px-4 py-6">
@@ -198,6 +188,15 @@ export default function FollowUps() {
         onClose={() => {
           setIsModalOpen(false);
           setSelectedConnection(null);
+        }}
+      />
+
+      <RecordingModal
+        open={isRecordingModalOpen}
+        onOpenChange={setIsRecordingModalOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['follow-ups'] });
+          queryClient.invalidateQueries({ queryKey: ['connections'] });
         }}
       />
     </div>
