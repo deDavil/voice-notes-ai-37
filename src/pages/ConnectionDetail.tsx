@@ -40,6 +40,7 @@ import {
   Calendar,
   FileText,
   ChevronRight,
+  ChevronDown,
   Bell,
   MessageCircle,
   Mail,
@@ -87,6 +88,7 @@ export default function ConnectionDetail() {
   const [newFact, setNewFact] = useState('');
   
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showTranscript, setShowTranscript] = useState(false);
 
   const startEditing = () => {
     if (connection) {
@@ -878,16 +880,26 @@ export default function ConnectionDetail() {
           </div>
         )}
 
-        {/* Original Transcription */}
+        {/* Original Transcription - Collapsible */}
         {connection.original_transcription && (
           <div className="space-y-2">
-            <Label className="text-muted-foreground flex items-center gap-2">
+            <button
+              onClick={() => setShowTranscript(!showTranscript)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+            >
+              {showTranscript ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
               <FileText className="w-4 h-4" />
-              Original Voice Note
-            </Label>
-            <p className="text-sm text-muted-foreground italic bg-muted/30 p-3 rounded-lg">
-              "{connection.original_transcription}"
-            </p>
+              <span>Original Voice Note</span>
+            </button>
+            {showTranscript && (
+              <p className="text-sm text-muted-foreground italic bg-muted/30 p-3 rounded-lg animate-fade-in">
+                "{connection.original_transcription}"
+              </p>
+            )}
           </div>
         )}
 
