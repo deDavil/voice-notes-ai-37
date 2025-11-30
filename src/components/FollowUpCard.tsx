@@ -1,22 +1,40 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FollowUpConnection, getStatusIndicator, formatDaysAgo } from '@/hooks/useFollowUps';
-import { MessageSquare, Check } from 'lucide-react';
+import { MessageSquare, Check, CheckCircle, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FollowUpCardProps {
   connection: FollowUpConnection;
   onPrepareMessage: (connection: FollowUpConnection) => void;
-  onMarkDone: (connectionId: string) => void;
+  onMarkDone: (connectionId: string) => Promise<void>;
 }
 
 export function FollowUpCard({ connection, onPrepareMessage, onMarkDone }: FollowUpCardProps) {
   const navigate = useNavigate();
+  const [isCompleting, setIsCompleting] = useState(false);
   const status = getStatusIndicator(connection.next_follow_up_at);
   const lastContact = formatDaysAgo(connection.last_interaction_at);
 
+  const handleMarkDone = async () => {
+    setIsCompleting(true);
+    try {
+      await onMarkDone(connection.id);
+    } finally {
+      // Keep completing state briefly for animation
+      setTimeout(() => setIsCompleting(false), 300);
+    }
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className={cn(
+        "hover:shadow-md transition-all duration-300",
+        isCompleting && "opacity-60 scale-[0.98]"
+      )}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
@@ -46,6 +64,7 @@ export function FollowUpCard({ connection, onPrepareMessage, onMarkDone }: Follo
             size="sm"
             className="flex-1 gap-2"
             onClick={() => onPrepareMessage(connection)}
+            disabled={isCompleting}
           >
             <MessageSquare className="w-4 h-4" />
             Prepare Message
@@ -53,11 +72,24 @@ export function FollowUpCard({ connection, onPrepareMessage, onMarkDone }: Follo
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
-            onClick={() => onMarkDone(connection.id)}
+            className={cn(
+              "gap-2 transition-all",
+              isCompleting && "bg-success/10 border-success text-success"
+            )}
+            onClick={handleMarkDone}
+            disabled={isCompleting}
           >
-            <Check className="w-4 h-4" />
-            Done
+            {isCompleting ? (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                Done!
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                Done
+              </>
+            )}
           </Button>
         </div>
       </CardContent>
