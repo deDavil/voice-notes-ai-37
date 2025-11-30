@@ -8,7 +8,6 @@ export interface Connection {
   name: string | null;
   how_we_met: string | null;
   profession_or_role: string | null;
-  key_interests: string[];
   important_facts: string[];
   relationship_type: string;
   tags: string[];
@@ -43,7 +42,6 @@ export interface ExtractedData {
   name: string | null;
   how_we_met: string | null;
   profession_or_role: string | null;
-  key_interests: string[];
   important_facts: string[];
   relationship_type: string;
   suggested_tags: string[];

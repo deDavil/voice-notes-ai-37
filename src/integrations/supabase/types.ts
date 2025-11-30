@@ -33,7 +33,6 @@ export type Database = {
           instagram_url: string | null
           introduced_by: string | null
           is_favorite: boolean | null
-          key_interests: string[] | null
           last_interaction_at: string | null
           linkedin_url: string | null
           location: string | null
@@ -70,7 +69,6 @@ export type Database = {
           instagram_url?: string | null
           introduced_by?: string | null
           is_favorite?: boolean | null
-          key_interests?: string[] | null
           last_interaction_at?: string | null
           linkedin_url?: string | null
           location?: string | null
@@ -107,7 +105,6 @@ export type Database = {
           instagram_url?: string | null
           introduced_by?: string | null
           is_favorite?: boolean | null
-          key_interests?: string[] | null
           last_interaction_at?: string | null
           linkedin_url?: string | null
           location?: string | null
