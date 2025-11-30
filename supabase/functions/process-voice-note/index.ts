@@ -85,23 +85,54 @@ ${transcription}
 CRITICAL RULES - READ CAREFULLY:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-IMPORTANT FACTS - Only extract LASTING information about the person
+IMPORTANT FACTS - Extract SPECIFIC, LASTING details as separate items
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ INCLUDE:
-- Family structure (spouse name, children names/ages)
-- Profession, company, role
-- Where they live (city/neighborhood)
-- Long-term interests or hobbies
-- Significant life facts (alma mater, hometown, major achievements)
+Each fact should be a separate "bubble" - specific details the user would want to remember.
+
+✅ INCLUDE (each as separate item):
+- Family members with NAMES (e.g., "Dog named Max", "Daughter named Sophie, age 7")
+- Specific places (e.g., "Lives in Brooklyn Heights", "Works at Google")
+- Role/profession details
+- Alma mater (e.g., "Went to Stanford")
+- Specific hobbies with details (e.g., "Runs marathons", "Plays guitar in a band")
 - Health conditions or important personal circumstances
+- Significant achievements or milestones
 
 ❌ EXCLUDE:
+- Generic descriptions without specifics
 - Temporary situations ("busy this week", "traveling for work")
 - One-time events ("had a playdate Saturday")
-- Object descriptions ("purple unicorn with sparkly horn")
 - Current mood or feelings
 - Anything that won't matter in 3 months
+
+FORMAT: Each fact should be brief (3-8 words) and self-contained.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAGS - MUST start with "Personal" or "Professional" category
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL: Every tag MUST begin with either "Personal" or "Professional" as the FIRST tag.
+
+Structure:
+- First tag: "Personal" OR "Professional" (based on relationship nature)
+- Remaining tags (2-4 more): Brief descriptors including interests
+
+For interests mentioned, add them as BRIEF tags (1-2 words):
+- "dogs" not "loves dogs" or "dog owner"
+- "yoga" not "practices yoga"
+- "cooking" not "enjoys cooking"
+- "tech" or "AI" for technology interests
+
+Industry/context tags:
+- tech, finance, healthcare, creative, education, legal, marketing, design
+- conference, meetup, introduction, work, social, alumni, referral
+
+RULES:
+- Maximum 5 tags total
+- First tag MUST be "Personal" or "Professional"
+- Keep interest tags to single words when possible
+- Don't duplicate information already in important_facts
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TO-DOs - Only extract CONCRETE COMMITMENTS you must act on
@@ -119,7 +150,6 @@ TO-DOs - Only extract CONCRETE COMMITMENTS you must act on
 - Wishes without commitment ("we should do coffee")
 
 CONSOLIDATION RULE: If multiple options are given for ONE task, extract as ONE to-do with the most concrete option.
-Example: "drop off Friday or meet Saturday" → Single TO-DO: "Return item (Saturday park meetup or Friday drop-off)"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SUGGESTIONS - Only extract EXPLICIT recommendations
@@ -134,20 +164,6 @@ SUGGESTIONS - Only extract EXPLICIT recommendations
 - Things they mentioned using (unless explicitly recommended)
 - General topics discussed (not recommendations)
 - Anything without a specific name/title
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-TAGS - Maximum 3-4 most relevant tags
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Select from:
-- Relationship: professional, personal, networking, mentor, client, investor, founder
-- Industry: tech, finance, healthcare, creative, education, legal, marketing, design
-- Context: conference, meetup, introduction, work, social, alumni, referral
-
-RULES:
-- Maximum 4 tags total
-- Prioritize: 1 relationship tag + 1-2 most specific descriptors
-- Don't tag obvious things (e.g., don't tag "friend" if already "personal")
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FOLLOW-UP ACTIONS - Brief, actionable next steps
@@ -180,10 +196,10 @@ Return JSON:
   "name": "string or null",
   "how_we_met": "string or null - brief context, one sentence max",
   "profession_or_role": "string or null",
-  "key_interests": ["max 3 lasting interests or hobbies"],
-  "important_facts": ["max 3-4 LASTING facts that will matter in 3+ months"],
+  "key_interests": [],
+  "important_facts": ["separate bubble for each specific fact - names, places, details"],
   "relationship_type": "professional|personal|networking|other",
-  "suggested_tags": ["max 4 tags"],
+  "suggested_tags": ["MUST start with Personal or Professional", "then brief interest/context tags"],
   "follow_up_actions": ["max 2 concrete next steps"],
   "todos": [
     {
@@ -204,10 +220,11 @@ Return JSON:
 }
 
 FINAL CHECK before responding:
-1. Would each "important fact" still matter in 3 months? If no, remove it.
-2. Are there duplicate TO-DOs? Consolidate them.
-3. Are there more than 4 tags? Remove the least specific ones.
-4. Is "additional_context" just repeating other fields? If yes, set to null.
+1. Does the first tag start with "Personal" or "Professional"? If not, fix it.
+2. Are specific details (names, places) in important_facts as separate items? 
+3. Are interest tags brief (1-2 words)?
+4. Would each "important fact" still matter in 3 months? If no, remove it.
+5. Are there duplicate TO-DOs? Consolidate them.
 
 Only return the JSON object, no other text.`;
 
