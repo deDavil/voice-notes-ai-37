@@ -84,7 +84,6 @@ export default function ConnectionDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>(null);
   const [newTag, setNewTag] = useState('');
-  const [newInterest, setNewInterest] = useState('');
   const [newFact, setNewFact] = useState('');
   
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -96,7 +95,6 @@ export default function ConnectionDetail() {
         name: connection.name || '',
         how_we_met: connection.how_we_met || '',
         profession_or_role: connection.profession_or_role || '',
-        key_interests: [...(connection.key_interests || [])],
         important_facts: [...(connection.important_facts || [])],
         relationship_type: connection.relationship_type,
         tags: [...(connection.tags || [])],
@@ -145,7 +143,6 @@ export default function ConnectionDetail() {
         name: formData.name || null,
         how_we_met: formData.how_we_met || null,
         profession_or_role: formData.profession_or_role || null,
-        key_interests: formData.key_interests,
         important_facts: formData.important_facts,
         relationship_type: formData.relationship_type,
         tags: formData.tags,
@@ -732,39 +729,6 @@ export default function ConnectionDetail() {
             </div>
           )}
         </div>
-
-        {/* Key Interests */}
-        {(displayData.key_interests?.length > 0 || isEditing) && (
-          <div className="space-y-2">
-            <Label className="text-muted-foreground">Interests</Label>
-            <div className="flex flex-wrap gap-2">
-              {displayData.key_interests?.map((interest: string, i: number) => (
-                <Badge key={i} variant="outline" className="gap-1">
-                  {interest}
-                  {isEditing && (
-                    <button onClick={() => handleRemoveItem('key_interests', i)} className="hover:text-destructive">
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </Badge>
-              ))}
-            </div>
-            {isEditing && (
-              <div className="flex gap-2">
-                <Input
-                  value={newInterest}
-                  onChange={(e) => setNewInterest(e.target.value)}
-                  placeholder="Add interest"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddItem('key_interests', newInterest, setNewInterest))}
-                  className="flex-1"
-                />
-                <Button variant="outline" size="icon" onClick={() => handleAddItem('key_interests', newInterest, setNewInterest)}>
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Important Facts */}
         {(displayData.important_facts?.length > 0 || isEditing) && (

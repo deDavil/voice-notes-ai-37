@@ -129,12 +129,6 @@ export function PrepareMessageModal({ connection, isOpen, onClose }: PrepareMess
                   <span>Met: {connection.how_we_met}</span>
                 </div>
               )}
-              {connection.key_interests && connection.key_interests.length > 0 && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Target className="w-4 h-4" />
-                  <span>Interests: {connection.key_interests.join(', ')}</span>
-                </div>
-              )}
             </CardContent>
           </Card>
 

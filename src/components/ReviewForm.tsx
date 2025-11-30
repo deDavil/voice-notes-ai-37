@@ -62,7 +62,6 @@ export function ReviewForm({
     name: extracted?.name || '',
     how_we_met: extracted?.how_we_met || '',
     profession_or_role: extracted?.profession_or_role || '',
-    key_interests: extracted?.key_interests || [],
     important_facts: extracted?.important_facts || [],
     relationship_type: extracted?.relationship_type || 'other',
     tags: extracted?.suggested_tags || [],
@@ -88,7 +87,6 @@ export function ReviewForm({
   const [newSuggestionType, setNewSuggestionType] = useState<SuggestionType>('book');
 
   const [newTag, setNewTag] = useState('');
-  const [newInterest, setNewInterest] = useState('');
   const [newFact, setNewFact] = useState('');
   const [newAction, setNewAction] = useState('');
   const [saveMode, setSaveMode] = useState<'new' | 'existing'>('new');
@@ -109,17 +107,6 @@ export function ReviewForm({
 
   const handleRemoveTag = (tag: string) => {
     setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
-  };
-
-  const handleAddInterest = () => {
-    if (newInterest.trim() && !formData.key_interests.includes(newInterest.trim())) {
-      setFormData(prev => ({ ...prev, key_interests: [...prev.key_interests, newInterest.trim()] }));
-      setNewInterest('');
-    }
-  };
-
-  const handleRemoveInterest = (interest: string) => {
-    setFormData(prev => ({ ...prev, key_interests: prev.key_interests.filter(i => i !== interest) }));
   };
 
   const handleAddFact = () => {
@@ -198,7 +185,6 @@ export function ReviewForm({
       name: formData.name || null,
       how_we_met: formData.how_we_met || null,
       profession_or_role: formData.profession_or_role || null,
-      key_interests: formData.key_interests,
       important_facts: formData.important_facts,
       relationship_type: formData.relationship_type,
       tags: formData.tags,
@@ -332,33 +318,6 @@ export function ReviewForm({
               className="flex-1"
             />
             <Button type="button" variant="outline" size="icon" onClick={handleAddTag}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Key Interests */}
-        <div>
-          <Label>Key Interests</Label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {formData.key_interests.map((interest) => (
-              <Badge key={interest} variant="outline" className="gap-1">
-                {interest}
-                <button onClick={() => handleRemoveInterest(interest)} className="hover:text-destructive">
-                  <X className="w-3 h-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Input
-              value={newInterest}
-              onChange={(e) => setNewInterest(e.target.value)}
-              placeholder="Add interest"
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddInterest())}
-              className="flex-1"
-            />
-            <Button type="button" variant="outline" size="icon" onClick={handleAddInterest}>
               <Plus className="w-4 h-4" />
             </Button>
           </div>

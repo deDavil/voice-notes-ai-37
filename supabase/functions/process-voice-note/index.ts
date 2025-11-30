@@ -196,7 +196,6 @@ Return JSON:
   "name": "string or null",
   "how_we_met": "string or null - brief context, one sentence max",
   "profession_or_role": "string or null",
-  "key_interests": [],
   "important_facts": ["separate bubble for each specific fact - names, places, details"],
   "relationship_type": "professional|personal|networking|other",
   "suggested_tags": ["MUST start with Personal or Professional", "then brief interest/context tags"],

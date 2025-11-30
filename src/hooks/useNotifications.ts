@@ -183,8 +183,8 @@ export function useCheckFollowUpNotifications() {
             : differenceInDays(now, new Date(connection.created_at));
 
           let message = `It's been ${daysSince} days since you last connected.`;
-          if (connection.key_interests && connection.key_interests.length > 0) {
-            message = `It's been ${daysSince} days. Ask about their ${connection.key_interests[0]}?`;
+          if (connection.tags && connection.tags.length > 0) {
+            message = `It's been ${daysSince} days. Reach out about ${connection.tags[0]}?`;
           }
 
           await supabase.from('notifications').insert({

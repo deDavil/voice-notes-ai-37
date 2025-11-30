@@ -66,7 +66,6 @@ export function RecordingModal({ open, onOpenChange, onSuccess }: RecordingModal
           await updateConnection.mutateAsync({
             id: existingId,
             ...data,
-            key_interests: [...new Set([...existing.key_interests, ...data.key_interests])],
             important_facts: [...existing.important_facts, ...data.important_facts],
             tags: [...new Set([...existing.tags, ...data.tags])],
             follow_up_actions: [...existing.follow_up_actions, ...data.follow_up_actions],
