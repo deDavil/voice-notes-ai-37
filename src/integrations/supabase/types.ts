@@ -48,6 +48,7 @@ export type Database = {
           tags: string[] | null
           twitter_url: string | null
           updated_at: string
+          user_id: string | null
           warmth_level: string | null
           website_url: string | null
         }
@@ -84,6 +85,7 @@ export type Database = {
           tags?: string[] | null
           twitter_url?: string | null
           updated_at?: string
+          user_id?: string | null
           warmth_level?: string | null
           website_url?: string | null
         }
@@ -120,6 +122,7 @@ export type Database = {
           tags?: string[] | null
           twitter_url?: string | null
           updated_at?: string
+          user_id?: string | null
           warmth_level?: string | null
           website_url?: string | null
         }
@@ -136,6 +139,7 @@ export type Database = {
           message: string | null
           title: string
           type: string
+          user_id: string | null
         }
         Insert: {
           action_url?: string | null
@@ -147,6 +151,7 @@ export type Database = {
           message?: string | null
           title: string
           type: string
+          user_id?: string | null
         }
         Update: {
           action_url?: string | null
@@ -158,6 +163,7 @@ export type Database = {
           message?: string | null
           title?: string
           type?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -168,6 +174,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          default_follow_up_frequency: string | null
+          default_view: string | null
+          email_notifications: boolean | null
+          full_name: string | null
+          id: string
+          show_follow_up_reminders: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          default_follow_up_frequency?: string | null
+          default_view?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id: string
+          show_follow_up_reminders?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          default_follow_up_frequency?: string | null
+          default_view?: string | null
+          email_notifications?: boolean | null
+          full_name?: string | null
+          id?: string
+          show_follow_up_reminders?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       suggestions: {
         Row: {
@@ -180,6 +222,7 @@ export type Database = {
           type: string
           updated_at: string
           url: string | null
+          user_id: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -191,6 +234,7 @@ export type Database = {
           type: string
           updated_at?: string
           url?: string | null
+          user_id?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -202,6 +246,7 @@ export type Database = {
           type?: string
           updated_at?: string
           url?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -222,6 +267,7 @@ export type Database = {
           is_completed: boolean | null
           text: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           completed_at?: string | null
@@ -231,6 +277,7 @@ export type Database = {
           is_completed?: boolean | null
           text: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           completed_at?: string | null
@@ -240,6 +287,7 @@ export type Database = {
           is_completed?: boolean | null
           text?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

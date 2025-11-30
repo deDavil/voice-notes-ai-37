@@ -40,7 +40,7 @@ interface ReviewFormProps {
   data: ProcessedVoiceNote;
   existingConnections: Connection[];
   onSave: (
-    data: Omit<Connection, 'id' | 'created_at' | 'updated_at'>,
+    data: Omit<Connection, 'id' | 'created_at' | 'updated_at' | 'user_id'>,
     existingId?: string,
     todos?: { text: string }[],
     suggestions?: { text: string; type: SuggestionType }[]

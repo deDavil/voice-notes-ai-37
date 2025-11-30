@@ -2,6 +2,7 @@ export interface Todo {
   id: string;
   created_at: string;
   updated_at: string;
+  user_id: string;
   connection_id: string;
   text: string;
   is_completed: boolean;
