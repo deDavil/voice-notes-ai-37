@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Navigation } from '@/components/Navigation';
-import { EmptyState } from '@/components/EmptyState';
+import { ConnectionsEmptyState } from '@/components/EmptyState';
 import { RecordingModal } from '@/components/RecordingModal';
 import { TagFilter } from '@/components/TagFilter';
 import { CategoryFilter } from '@/components/CategoryFilter';
@@ -14,7 +14,7 @@ import { ConnectionTableView } from '@/components/ConnectionTableView';
 import { useConnections } from '@/hooks/useConnections';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Mic } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type CategoryType = 'all' | 'professional' | 'personal';
@@ -73,9 +73,6 @@ const Index = () => {
   const hasActiveFilters = selectedTags.length > 0 || categoryFilter !== 'all' || searchQuery.trim();
 
   const handleOpenRecording = () => setRecordingOpen(true);
-  const handleSuccess = () => {
-    // Could navigate to the new connection, but for now just close
-  };
 
   const handleConnectionClick = (id: string) => {
     navigate(`/connection/${id}`);
@@ -86,15 +83,16 @@ const Index = () => {
       <Header onAddConnection={handleOpenRecording} />
       <Navigation />
 
-      <main className="container max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {isLoading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          <div className="space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
             ))}
           </div>
         ) : connections && connections.length > 0 ? (
           <>
+            {/* Filters row */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <CategoryFilter 
                 value={categoryFilter}
@@ -105,24 +103,43 @@ const Index = () => {
                   value={searchQuery}
                   onChange={setSearchQuery}
                   placeholder="Search connections..."
-                  className="w-full sm:w-64"
+                  className="w-full sm:w-56"
                 />
                 <ViewSwitcher currentView={viewMode} onChange={handleViewChange} />
               </div>
             </div>
             
-            <TagFilter 
-              connections={connections}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-            />
+            {/* Tags filter */}
+            <div className="mb-5">
+              <TagFilter 
+                connections={connections}
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+              />
+            </div>
             
+            {/* Results count */}
             {hasActiveFilters && (
-              <p className="text-sm text-muted-foreground mb-4">
-                Showing {filteredConnections.length} of {connections.length} connections
-              </p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  {filteredConnections.length} of {connections.length} connections
+                </p>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTags([]);
+                    setSearchQuery('');
+                    setCategoryFilter('all');
+                  }}
+                  className="text-xs h-7"
+                >
+                  Clear filters
+                </Button>
+              </div>
             )}
             
+            {/* Connections list */}
             {filteredConnections.length > 0 ? (
               <div className="animate-fade-in">
                 {viewMode === 'list' && (
@@ -147,37 +164,36 @@ const Index = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>No connections match the selected filters.</p>
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-2">No connections match your filters</p>
                 <Button 
-                  variant="link" 
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setSelectedTags([]);
                     setSearchQuery('');
                     setCategoryFilter('all');
                   }}
-                  className="mt-2"
                 >
-                  Clear filters
+                  Clear all filters
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <EmptyState onAddConnection={handleOpenRecording} />
+          <ConnectionsEmptyState onAddConnection={handleOpenRecording} />
         )}
       </main>
 
-      {/* Floating action button on mobile when there are connections */}
+      {/* Floating action button on mobile */}
       {connections && connections.length > 0 && (
         <div className="fixed bottom-6 right-6 sm:hidden">
           <Button
-            variant="accent"
             size="icon-lg"
-            className="rounded-full shadow-xl"
+            className="rounded-full shadow-lg"
             onClick={handleOpenRecording}
           >
-            <Mic className="w-6 h-6" />
+            <Plus className="w-5 h-5" />
           </Button>
         </div>
       )}
@@ -185,7 +201,7 @@ const Index = () => {
       <RecordingModal
         open={recordingOpen}
         onOpenChange={setRecordingOpen}
-        onSuccess={handleSuccess}
+        onSuccess={() => {}}
       />
     </div>
   );

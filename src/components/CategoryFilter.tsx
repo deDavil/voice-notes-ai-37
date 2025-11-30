@@ -1,4 +1,3 @@
-import { Briefcase, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type CategoryType = 'all' | 'professional' | 'personal';
@@ -8,28 +7,27 @@ interface CategoryFilterProps {
   onChange: (value: CategoryType) => void;
 }
 
-const categories: { id: CategoryType; label: string; icon: React.ReactNode }[] = [
-  { id: 'all', label: 'All', icon: <Users className="w-4 h-4" /> },
-  { id: 'professional', label: 'Professional', icon: <Briefcase className="w-4 h-4" /> },
-  { id: 'personal', label: 'Personal', icon: <User className="w-4 h-4" /> },
+const categories: { value: CategoryType; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'professional', label: 'Professional' },
+  { value: 'personal', label: 'Personal' },
 ];
 
 export function CategoryFilter({ value, onChange }: CategoryFilterProps) {
   return (
-    <div className="flex gap-2 mb-4">
-      {categories.map((cat) => (
+    <div className="flex items-center gap-1">
+      {categories.map((category) => (
         <button
-          key={cat.id}
-          onClick={() => onChange(cat.id)}
+          key={category.value}
+          onClick={() => onChange(category.value)}
           className={cn(
-            'flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors',
-            value === cat.id
-              ? 'bg-accent text-accent-foreground'
-              : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+            "px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
+            value === category.value
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary"
           )}
         >
-          {cat.icon}
-          {cat.label}
+          {category.label}
         </button>
       ))}
     </div>
